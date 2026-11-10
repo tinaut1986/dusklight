@@ -139,7 +139,8 @@ jobs:
             echo
             echo "- Linux / Steam Deck: \`${{ steps.vars.outputs.asset }}\`"
             echo "- Already installed from an AppImage: the game offers to install this"
-            echo "  version from its start screen (checked against the SHA-256 below)."
+            echo "  version from its start screen, verified against the SHA-256 digest"
+            echo "  GitHub publishes for the file (also attached as \`.sha256\`)."
             echo
             echo "## Changes"
             echo
