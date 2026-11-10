@@ -1,6 +1,7 @@
 #include "graphics_tuner.hpp"
 
 #include "button.hpp"
+#include "i18n.hpp"
 
 #include "dusk/config.hpp"
 #include "dusk/logging.h"
@@ -15,6 +16,8 @@
 #include <type_traits>
 
 namespace dusk::ui {
+
+using i18n::tr_str;
 namespace {
 
 const Rml::String kDocumentSource = R"RML(
@@ -44,7 +47,8 @@ Rml::String format_internal_resolution(int value) {
     u32 height = 0;
     AuroraGetRenderSize(&width, &height);
     if (value <= 0) {
-        return fmt::format("Auto ({}×{})", width, height);
+        return fmt::format(fmt::runtime(i18n::tr_source("graphics.auto_resolution")),
+            fmt::arg("width", width), fmt::arg("height", height));
     }
     return fmt::format("{}× ({}×{})", value, width, height);
 }
@@ -52,9 +56,9 @@ Rml::String format_internal_resolution(int value) {
 Rml::String format_resampler(int value) {
     switch (static_cast<Resampler>(value)) {
     case Resampler::Bilinear:
-        return "Bilinear";
+        return tr_str("graphics.resampler_bilinear");
     case Resampler::Area:
-        return "Area";
+        return tr_str("graphics.resampler_area");
     default:
         return "";
     }
@@ -63,9 +67,9 @@ Rml::String format_resampler(int value) {
 Rml::String format_post_process_mode(int value) {
     switch (static_cast<BloomMode>(value)) {
     case BloomMode::Off:
-        return "Off";
+        return tr_str("common.off");
     case BloomMode::Classic:
-        return "Classic";
+        return tr_str("preset.classic");
     case BloomMode::Dusk:
         return "Dusklight";
     default:
@@ -261,11 +265,13 @@ GraphicsTuner::GraphicsTuner(GraphicsTunerProps props)
     }
 
     if (auto* footer = mDocument->GetElementById("footer")) {
-        auto& returnButton = add_component<Button>(footer, "\xE2\x86\x90 Return", "footer-button")
+        auto& returnButton = add_component<Button>(
+            footer, tr_str("misc.return"), "footer-button")
                                  .on_pressed([this] { pop(); });
         returnButton.root()->SetClass("return", true);
         auto& resetButton =
-            add_component<Button>(footer, "Reset to default", "footer-button").on_pressed([this] {
+            add_component<Button>(footer, tr_str("misc.reset_to_default"), "footer-button")
+                .on_pressed([this] {
                 mDoAud_seStartMenu(kSoundItemChange);
                 reset_default();
             });

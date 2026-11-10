@@ -1,0 +1,175 @@
+name: Build Release
+
+# Fork release pipeline (tinaut1986/dusklight).
+#
+# Two version numbers:
+#   - ours, which the in-game updater compares: v1.0.0, v1.1.0, ...
+#   - the upstream TwilitRealm/dusklight version the build is based on.
+# Tags carry both as semver build metadata: v1.0.0+base.2.0.3. The "+base..."
+# part is ignored when comparing versions, so only our number drives updates.
+# Upstream tags (v2.0.3) never match the trigger below and never build here.
+#
+# Channels:
+#   - release branch: beta. A tag on it publishes a prerelease.
+#   - main branch:    stable. It only moves by merging release.
+# Stable vs beta is decided by whether main can reach the tagged commit.
+# To promote a beta: merge release into main, push main, then re-run this
+# workflow ON THE TAG; the same release page becomes stable and "latest".
+# Push main BEFORE a stable tag, otherwise the build cannot see the merge yet
+# and publishes a beta (recoverable: re-run on the tag after pushing main).
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+\+base.v?[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    name: Linux x86_64 AppImage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Determine version, base and channel
+        id: vars
+        run: |
+          case "$GITHUB_REF" in
+            refs/tags/*) TAG="${GITHUB_REF#refs/tags/}" ;;
+            *) TAG=$(git describe --tags --exact-match --match 'v*+base.*' 2>/dev/null || true) ;;
+          esac
+          if ! [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)\+base\.v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error::'$TAG' is not a fork release tag (expected v1.2.3+base.2.0.3). Run this on a tag."
+            exit 1
+          fi
+          VERSION="v${BASH_REMATCH[1]}"
+          TAG_BASE="v${BASH_REMATCH[2]}"
+
+          # The base in the tag must be the upstream version actually merged.
+          BASE=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' --exclude '*+*' HEAD)
+          if [ "$BASE" != "$TAG_BASE" ]; then
+            echo "::error::Tag says base $TAG_BASE but the nearest upstream tag is $BASE. Retag as ${VERSION}+base.${BASE#v}."
+            exit 1
+          fi
+
+          git fetch --no-tags --quiet origin +refs/heads/main:refs/remotes/origin/main || true
+          if git merge-base --is-ancestor HEAD refs/remotes/origin/main 2>/dev/null; then
+            PRERELEASE=false; CHANNEL=Release; BETA=OFF
+          else
+            PRERELEASE=true; CHANNEL=Beta; BETA=ON
+          fi
+
+          ASSET="Dusklight-${VERSION}-base-${BASE}-linux-x86_64.AppImage"
+          {
+            echo "tag=$TAG"
+            echo "version=$VERSION"
+            echo "base=$BASE"
+            echo "prerelease=$PRERELEASE"
+            echo "channel=$CHANNEL"
+            echo "beta=$BETA"
+            echo "asset=$ASSET"
+          } >> "$GITHUB_OUTPUT"
+          echo "$CHANNEL $VERSION (base $BASE) -> $ASSET"
+
+      - name: Check translations
+        run: python3 tools/check_l10n.py
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install ninja-build clang lld mold openssl libcurl4-openssl-dev \
+            zlib1g-dev libglu1-mesa-dev libdbus-1-dev libvulkan-dev libxi-dev libxrandr-dev libasound2-dev \
+            libpulse-dev libudev-dev libpng-dev libncurses5-dev libx11-xcb-dev libfreetype-dev \
+            libxinerama-dev libxcursor-dev python3-markupsafe libgtk-3-dev libssl-dev \
+            libxss-dev libfuse2 libusb-1.0-0-dev libdecor-0-dev libpipewire-0.3-dev libunwind-dev
+
+      # Same as upstream's Linux CI, minus sccache and Sentry crash reporting:
+      # fork builds must not report into upstream's production Sentry.
+      - name: Configure
+        run: |
+          cmake --preset linux-default-relwithdebinfo \
+            -DAURORA_SDL3_PROVIDER=vendor \
+            -DBOREALIS_CURL_PROVIDER=vendor \
+            -DDUSK_BETA_BUILD=${{ steps.vars.outputs.beta }}
+
+      - name: Build
+        run: cmake --build --preset linux-default-relwithdebinfo
+
+      - name: Install
+        run: cmake --install build/linux-default-relwithdebinfo
+
+      - name: Package AppImage
+        env:
+          APP_VERSION: ${{ steps.vars.outputs.version }}
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+        run: |
+          ci/build-appimage.sh
+          mkdir -p dist
+          mv build/install/Dusklight-*.AppImage "dist/${{ steps.vars.outputs.asset }}"
+          (cd dist && sha256sum "${{ steps.vars.outputs.asset }}" > "${{ steps.vars.outputs.asset }}.sha256")
+          ls -la dist
+
+      - name: Release notes
+        run: |
+          TAG="${{ steps.vars.outputs.tag }}"
+          BASE="${{ steps.vars.outputs.base }}"
+          # Previous fork release reachable through any parent (a stable tag sits
+          # on a merge into main; the beta it promotes is on the second parent).
+          # With none, start at the upstream base so upstream history stays out.
+          PREV=$(git describe --tags --abbrev=0 --match 'v*+base.*' --exclude "$TAG" "$TAG" 2>/dev/null || true)
+          RANGE="${PREV:-$BASE}..${TAG}"
+          {
+            if [ "${{ steps.vars.outputs.prerelease }}" = "true" ]; then
+              echo "> **Beta build.** It comes from the \`release\` branch and has not been"
+              echo "> merged into \`main\` yet, so it is not a stable version."
+              echo
+            fi
+            echo "Based on [TwilitRealm/dusklight ${BASE}](https://github.com/TwilitRealm/dusklight/releases/tag/${BASE})."
+            echo
+            echo "## Install"
+            echo
+            echo "- Linux / Steam Deck: \`${{ steps.vars.outputs.asset }}\`"
+            echo "- Already installed from an AppImage: the game offers to install this"
+            echo "  version from its start screen, verified against the SHA-256 digest"
+            echo "  GitHub publishes for the file (also attached as \`.sha256\`)."
+            echo
+            echo "## Changes"
+            echo
+            if [ -n "$PREV" ]; then
+              echo "Since ${PREV}:"
+              echo
+            fi
+            # First parent only: upstream merges show as one line instead of
+            # hundreds of upstream commits.
+            git log --first-parent --pretty='- %s (%h)' ${RANGE}
+          } > release_notes.md
+          cat release_notes.md
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dusklight-${{ steps.vars.outputs.version }}-linux-x86_64
+          path: dist/
+
+      - name: Create / Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: ${{ steps.vars.outputs.channel }} ${{ steps.vars.outputs.version }} (base ${{ steps.vars.outputs.base }})
+          draft: false
+          prerelease: ${{ steps.vars.outputs.prerelease == 'true' }}
+          # /releases/latest must always be the newest stable.
+          make_latest: ${{ steps.vars.outputs.prerelease == 'true' && 'false' || 'true' }}
+          body_path: release_notes.md
+          files: |
+            dist/${{ steps.vars.outputs.asset }}
+            dist/${{ steps.vars.outputs.asset }}.sha256

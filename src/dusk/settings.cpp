@@ -71,7 +71,9 @@ UserSettings g_userSettings = {
         .enableLinkDollRotation {"game.enableLinkDollRotation", false},
         .enableAchievementToasts {"game.enableAchievementToasts", true},
         .enableControllerToasts {"game.enableControllerToasts", true},
-        .enableDiscordPresence {"game.enableDiscordPresence", true},
+        // Fork: off by default so people do not reach upstream's Discord through a
+        // build they do not ship. Users can still turn it on in Interface settings.
+        .enableDiscordPresence {"game.enableDiscordPresence", false},
         .menuScalingMode {"game.menuScalingMode", MenuScaling::Wii},
 
         // Graphics
@@ -175,6 +177,10 @@ UserSettings g_userSettings = {
         .lastSelectedGameModeId {"game.lastSelectedGameModeId", gamemode::kVanillaGameModeId}
     },
 
+    .ui = {
+        .menuLanguage {"ui.language", "auto"},
+    },
+
     .backend = {
         .isoPath {"backend.isoPath", ""},
         .isoVerification {"backend.isoVerification", DiscVerificationState::Unknown},
@@ -183,6 +189,7 @@ UserSettings g_userSettings = {
         .showPipelineCompilation {"backend.showPipelineCompilation", true},
         .wasPresetChosen {"backend.wasPresetChosen", false},
         .checkForUpdates {"backend.checkForUpdates", true},
+        .betaUpdates {"backend.betaUpdates", false},
         .checkForModUpdates {"backend.checkForModUpdates", true},
         .cardFileType {"backend.cardFileType", static_cast<int>(CARD_GCIFOLDER)},
         .enableAdvancedSettings {"backend.enableAdvancedSettings", false},
@@ -404,6 +411,7 @@ void registerSettings() {
     Register(g_userSettings.backend.showPipelineCompilation);
     Register(g_userSettings.backend.wasPresetChosen);
     Register(g_userSettings.backend.checkForUpdates);
+    Register(g_userSettings.backend.betaUpdates);
     Register(g_userSettings.backend.checkForModUpdates);
     Register(g_userSettings.backend.cardFileType);
     Register(g_userSettings.backend.enableAdvancedSettings);
@@ -432,6 +440,8 @@ void registerSettings() {
     Register(g_userSettings.actionBindings.turboSpeedButton[1]);
     Register(g_userSettings.actionBindings.turboSpeedButton[2]);
     Register(g_userSettings.actionBindings.turboSpeedButton[3]);
+
+    Register(g_userSettings.ui.menuLanguage);
 }
 
 // Transient settings

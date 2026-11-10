@@ -1,6 +1,7 @@
 #include "package_row.hpp"
 
 #include "fmt/format.h"
+#include "i18n.hpp"
 
 namespace dusk::ui {
 namespace {
@@ -43,25 +44,26 @@ std::string state_label(const mods::queue::Item& item) {
     using enum mods::queue::State;
     switch (item.state) {
     case Queued:
-        return "Queued";
+        return i18n::tr_str("browser.queued");
     case Downloading:
-        return "Downloading";
+        return i18n::tr_str("browser.downloading");
     case Paused:
-        return "Paused";
+        return i18n::tr_str("browser.paused");
     case Retrying:
-        return fmt::format("Retrying in {}s", item.retrySeconds);
+        return fmt::format(fmt::runtime(i18n::tr_source("browser.retrying_in")),
+            fmt::arg("seconds", item.retrySeconds));
     case Verifying:
-        return "Verifying";
+        return i18n::tr_str("browser.verifying");
     case Handoff:
-        return "Installing";
+        return i18n::tr_str("browser.installing");
     case Installed:
-        return "Installed";
+        return i18n::tr_str("browser.installed");
     case InstallFailed:
-        return "Failed";
+        return i18n::tr_str("mods.failed");
     case Failed:
-        return "Failed";
+        return i18n::tr_str("mods.failed");
     case Canceled:
-        return "Canceled";
+        return i18n::tr_str("browser.canceled");
     }
     return {};
 }

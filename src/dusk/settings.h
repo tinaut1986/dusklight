@@ -337,6 +337,12 @@ struct UserSettings {
     } game;
 
     struct {
+        // Dusklight UI language: a res/l10n file code ("es", "pt-BR", ...) or "auto".
+        // Not the game's own language (game.language).
+        ConfigVar<std::string> menuLanguage;
+    } ui;
+
+    struct {
         ConfigVar<std::string> isoPath;
         ConfigVar<DiscVerificationState> isoVerification;
         ConfigVar<std::string> graphicsBackend;
@@ -344,6 +350,8 @@ struct UserSettings {
         ConfigVar<bool> showPipelineCompilation;
         ConfigVar<bool> wasPresetChosen;
         ConfigVar<bool> checkForUpdates;
+        // Fork: also offer prerelease (beta) builds when checking for updates.
+        ConfigVar<bool> betaUpdates;
         ConfigVar<bool> checkForModUpdates;
         ConfigVar<int> cardFileType;
         ConfigVar<bool> enableAdvancedSettings;
