@@ -1329,7 +1329,7 @@ bool Prelaunch::handle_nav_command(Rml::Event& event, NavCommand cmd) {
     const auto n = menuCount + (updateShown ? 1 : 0);
     int i = ((focusedButton + direction) % n + n) % n;
     for (int tries = 0; tries < n; ++tries, i = ((i + direction) % n + n) % n) {
-        const bool focused = i == menuCount ? mUpdateDownload->Focus() : mMenuButtons[i]->focus();
+        const bool focused = i == menuCount ? mUpdateDownload->Focus(true) : mMenuButtons[i]->focus();
         if (focused) {
             mDoAud_seStartMenu(kSoundItemFocus);
             event.StopPropagation();

@@ -181,7 +181,7 @@ public:
         const auto* cached = self_update::last_check();
         if (cached != nullptr && mode != ChangelogMode::CheckNow) {
             mCheck = *cached;
-            show();
+            render();
         } else {
             set_message(i18n::tr_str(
                 mode == ChangelogMode::CheckNow ? "prelaunch.update.checking" : "changelog.loading"));
@@ -202,7 +202,7 @@ public:
             if (result && result->result.status != borealis::update::Status::Failed) {
                 self_update::set_last_check(*result);
                 mCheck = std::move(result);
-                show();
+                render();
             } else {
                 set_message(i18n::tr_str("changelog.failed"));
             }
@@ -337,7 +337,9 @@ private:
         mBody->SetInnerRML("<changelog-empty>" + escape(text) + "</changelog-empty>");
     }
 
-    void show() {
+    // Not show(): that is the virtual Document::show(); a member with that name
+    // overrode it and kept the window from ever opening.
+    void render() {
         const auto& entries = mMode == ChangelogMode::History ? mCheck->history : mCheck->whatsNew;
         if (entries.empty()) {
             set_message(i18n::tr_str(
