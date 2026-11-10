@@ -134,6 +134,15 @@ public:
     static f32 getSafeMaxYF() { return m_safeMaxYF; }
     static f32 ScaleHUDXLeft(f32 baseX) { return getSafeMinXF() + baseX; }
     static f32 ScaleHUDXRight(f32 baseX) { return getSafeMaxXF() - FB_WIDTH_BASE + baseX; }
+    // Fork: "HUD Margin" pulls the in-game HUD towards the screen edges by part
+    // of the original TV-safe (overscan) margin. Only the gameplay HUD uses these;
+    // menus keep ScaleHUDX*.
+    static f32 hudMarginShiftX();
+    static f32 hudMarginShiftY();
+    static f32 HUDEdgeLeft(f32 baseX) { return ScaleHUDXLeft(baseX) - hudMarginShiftX(); }
+    static f32 HUDEdgeRight(f32 baseX) { return ScaleHUDXRight(baseX) + hudMarginShiftX(); }
+    static f32 HUDEdgeTop(f32 baseY) { return baseY - hudMarginShiftY(); }
+    static f32 HUDEdgeBottom(f32 baseY) { return baseY + hudMarginShiftY(); }
 #endif
 
     static void setBlureMtx(const Mtx m) {

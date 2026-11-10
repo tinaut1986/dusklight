@@ -235,6 +235,9 @@ struct UserSettings {
         ConfigVar<bool> enableMirrorMode;
         ConfigVar<bool> minimalHUD;
         ConfigVar<float> hudScale;
+        // Fork: share of the original TV-safe margin the in-game HUD keeps from
+        // the screen edges (1 = original, 0 = close to the edges).
+        ConfigVar<float> hudMargin;
         ConfigVar<bool> pauseOnFocusLost;
         ConfigVar<bool> enableLinkDollRotation;
         ConfigVar<bool> enableAchievementToasts;

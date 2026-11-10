@@ -717,6 +717,24 @@ DUSK_GAME_DATA f32 mDoGph_gInf_c::m_safeMaxYF = FB_HEIGHT_BASE;
 DUSK_GAME_DATA f32 mDoGph_gInf_c::m_safeWidthF = FB_WIDTH_BASE;
 DUSK_GAME_DATA f32 mDoGph_gInf_c::m_safeHeightF = FB_HEIGHT_BASE;
 
+// Fork: how far (in 608x448 base units) the HUD may move towards the edges at
+// "HUD Margin" 0 %. The original layout keeps about 50 units at the sides and
+// 35 at the top/bottom for CRT overscan; these leave a small border.
+static constexpr f32 kHudMarginMaxShiftX = 40.0f;
+static constexpr f32 kHudMarginMaxShiftY = 24.0f;
+
+static f32 hud_margin_pull() {
+    return 1.0f - std::clamp(dusk::getSettings().game.hudMargin.getValue(), 0.0f, 1.0f);
+}
+
+f32 mDoGph_gInf_c::hudMarginShiftX() {
+    return hud_margin_pull() * kHudMarginMaxShiftX;
+}
+
+f32 mDoGph_gInf_c::hudMarginShiftY() {
+    return hud_margin_pull() * kHudMarginMaxShiftY;
+}
+
 void mDoGph_gInf_c::updateSafeAreaBounds() {
     m_safeMinXF = m_minXF;
     m_safeMinYF = m_minYF;

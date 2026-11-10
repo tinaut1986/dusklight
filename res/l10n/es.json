@@ -959,7 +959,9 @@
       "livesplit": "Conexión con LiveSplit",
       "livesplit_help": "Conecta con el servidor de LiveSplit en localhost:16834. Para que funcione, haz clic derecho en LiveSplit y activa Control -> Start TCP Server. Para ver el IGT en LiveSplit, cambia tu comparación a Game Time.",
       "show_rta": "Mostrar RTA",
-      "show_rta_help": "Muestra el cronómetro RTA. El IGT siempre es visible."
+      "show_rta_help": "Muestra el cronómetro RTA. El IGT siempre es visible.",
+      "hud_margin": "Margen del HUD",
+      "hud_margin_help": "Distancia entre el HUD de la partida (corazones, botones, minimapa, rupias) y los bordes de la pantalla. El 100 % es el margen original, pensado para las teles antiguas que recortaban los bordes; con menos se acerca a los bordes."
     },
     "cheats": {
       "infinite_hearts": "Corazones infinitos",

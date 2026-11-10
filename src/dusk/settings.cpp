@@ -1,4 +1,5 @@
 #include "dusk/settings.h"
+#include "d/d_meter2_info.h"
 
 #include "dusk/config.hpp"
 #include "dusk/game_mode.hpp"
@@ -69,6 +70,7 @@ UserSettings g_userSettings = {
         .enableMirrorMode {"game.enableMirrorMode", false},
         .minimalHUD {"game.minimalHUD", false},
         .hudScale {"game.hudScale", 1.0f},
+        .hudMargin {"game.hudMargin", 1.0f},
         .pauseOnFocusLost {"game.pauseOnFocusLost", false},
         .enableLinkDollRotation {"game.enableLinkDollRotation", false},
         .enableAchievementToasts {"game.enableAchievementToasts", true},
@@ -321,6 +323,9 @@ void registerSettings() {
     Register(g_userSettings.game.touchCameraYSensitivity);
     Register(g_userSettings.game.minimalHUD);
     Register(g_userSettings.game.hudScale);
+    // Re-lay out the HUD at once (same path as a window resize).
+    Register(g_userSettings.game.hudMargin,
+        [](const float&, const float&) { dMeter2Info_onWide2D(); });
     Register(g_userSettings.game.pauseOnFocusLost,
         [](const bool& value, const bool&) { aurora_set_pause_on_focus_lost(value); });
     Register(g_userSettings.game.enableDiscordPresence);

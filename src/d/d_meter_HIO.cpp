@@ -2292,24 +2292,36 @@ void dMeter_drawHIO_c::updateOnWide() {
     // Main HUD
     g_drawHIO = {};
 
-    g_drawHIO.mMainHUDButtonsPosX = mDoGph_gInf_c::ScaleHUDXRight(g_drawHIO.mMainHUDButtonsPosX);
-    g_drawHIO.mRingHUDButtonsPosX = mDoGph_gInf_c::ScaleHUDXRight(g_drawHIO.mRingHUDButtonsPosX);
-    g_drawHIO.mLightDrop.mVesselPosX = mDoGph_gInf_c::ScaleHUDXRight(g_drawHIO.mLightDrop.mVesselPosX);
-    g_drawHIO.mLightDrop.mVesselTalkPosX = mDoGph_gInf_c::ScaleHUDXRight(g_drawHIO.mLightDrop.mVesselTalkPosX);
-    g_drawHIO.mRupeeKeyPosX = mDoGph_gInf_c::ScaleHUDXRight(g_drawHIO.mRupeeKeyPosX);
-    g_drawHIO.mOxygenMeterPosX = mDoGph_gInf_c::ScaleHUDXLeft(g_drawHIO.mOxygenMeterPosX);
-    g_drawHIO.mButtonCrossOFFPosX = mDoGph_gInf_c::ScaleHUDXLeft(g_drawHIO.mButtonCrossOFFPosX);
-    g_drawHIO.mButtonCrossONPosX = mDoGph_gInf_c::ScaleHUDXLeft(g_drawHIO.mButtonCrossONPosX);
-    g_drawHIO.mLifeGaugePosX = mDoGph_gInf_c::ScaleHUDXLeft(g_drawHIO.mLifeGaugePosX);
-    g_drawHIO.mLanternMeterPosX = mDoGph_gInf_c::ScaleHUDXLeft(g_drawHIO.mLanternMeterPosX);
+    // Fork: HUDEdge* = the edge anchoring above plus the "HUD Margin" pull.
+    // Top-right: action buttons.
+    g_drawHIO.mMainHUDButtonsPosX = mDoGph_gInf_c::HUDEdgeRight(g_drawHIO.mMainHUDButtonsPosX);
+    g_drawHIO.mRingHUDButtonsPosX = mDoGph_gInf_c::HUDEdgeRight(g_drawHIO.mRingHUDButtonsPosX);
+    g_drawHIO.mMainHUDButtonsPosY = mDoGph_gInf_c::HUDEdgeTop(g_drawHIO.mMainHUDButtonsPosY);
+    g_drawHIO.mRingHUDButtonsPosY = mDoGph_gInf_c::HUDEdgeTop(g_drawHIO.mRingHUDButtonsPosY);
+    // Right: Tears of Light vessel (horizontal only).
+    g_drawHIO.mLightDrop.mVesselPosX = mDoGph_gInf_c::HUDEdgeRight(g_drawHIO.mLightDrop.mVesselPosX);
+    g_drawHIO.mLightDrop.mVesselTalkPosX = mDoGph_gInf_c::HUDEdgeRight(g_drawHIO.mLightDrop.mVesselTalkPosX);
+    // Bottom-right: rupees and keys.
+    g_drawHIO.mRupeeKeyPosX = mDoGph_gInf_c::HUDEdgeRight(g_drawHIO.mRupeeKeyPosX);
+    g_drawHIO.mRupeeKeyPosY = mDoGph_gInf_c::HUDEdgeBottom(g_drawHIO.mRupeeKeyPosY);
+    // Top-left: hearts, lantern oil, oxygen.
+    g_drawHIO.mLifeGaugePosX = mDoGph_gInf_c::HUDEdgeLeft(g_drawHIO.mLifeGaugePosX);
+    g_drawHIO.mLifeGaugePosY = mDoGph_gInf_c::HUDEdgeTop(g_drawHIO.mLifeGaugePosY);
+    g_drawHIO.mLanternMeterPosX = mDoGph_gInf_c::HUDEdgeLeft(g_drawHIO.mLanternMeterPosX);
+    g_drawHIO.mLanternMeterPosY = mDoGph_gInf_c::HUDEdgeTop(g_drawHIO.mLanternMeterPosY);
+    g_drawHIO.mOxygenMeterPosX = mDoGph_gInf_c::HUDEdgeLeft(g_drawHIO.mOxygenMeterPosX);
+    g_drawHIO.mOxygenMeterPosY = mDoGph_gInf_c::HUDEdgeTop(g_drawHIO.mOxygenMeterPosY);
+    // Left, mid-height: Items / Map hints (horizontal only).
+    g_drawHIO.mButtonCrossOFFPosX = mDoGph_gInf_c::HUDEdgeLeft(g_drawHIO.mButtonCrossOFFPosX);
+    g_drawHIO.mButtonCrossONPosX = mDoGph_gInf_c::HUDEdgeLeft(g_drawHIO.mButtonCrossONPosX);
 
     // River Canoe Minigame
-    g_drawHIO.mMiniGame.mCounterPosX[1] = mDoGph_gInf_c::ScaleHUDXRight(g_drawHIO.mMiniGame.mCounterPosX[1]);
-    g_drawHIO.mMiniGame.mIconPosX[1] = mDoGph_gInf_c::ScaleHUDXRight(g_drawHIO.mMiniGame.mIconPosX[1]);
+    g_drawHIO.mMiniGame.mCounterPosX[1] = mDoGph_gInf_c::HUDEdgeRight(g_drawHIO.mMiniGame.mCounterPosX[1]);
+    g_drawHIO.mMiniGame.mIconPosX[1] = mDoGph_gInf_c::HUDEdgeRight(g_drawHIO.mMiniGame.mIconPosX[1]);
 
     // Bulblin Count in Hidden Village
-    g_drawHIO.mMiniGame.mCounterPosX[2] = mDoGph_gInf_c::ScaleHUDXRight(g_drawHIO.mMiniGame.mCounterPosX[2]);
-    g_drawHIO.mMiniGame.mIconPosX[2] = mDoGph_gInf_c::ScaleHUDXRight(g_drawHIO.mMiniGame.mIconPosX[2]);
+    g_drawHIO.mMiniGame.mCounterPosX[2] = mDoGph_gInf_c::HUDEdgeRight(g_drawHIO.mMiniGame.mCounterPosX[2]);
+    g_drawHIO.mMiniGame.mIconPosX[2] = mDoGph_gInf_c::HUDEdgeRight(g_drawHIO.mMiniGame.mIconPosX[2]);
 #endif
 }
 

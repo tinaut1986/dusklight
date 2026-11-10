@@ -1296,6 +1296,11 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
             tr_str("settings.gameplay.hud_scale_help"),
             50, 200, 5,
             [] { return getSettings().game.minimalHUD.getValue(); });
+        config_percent_select(leftPane, rightPane, getSettings().game.hudMargin,
+            tr_str("settings.gameplay.hud_margin"),
+            tr_str("settings.gameplay.hud_margin_help"),
+            0, 100, 10,
+            [] { return getSettings().game.minimalHUD.getValue(); });
         addOption(tr_str("settings.gameplay.restore_wii_glitches"), getSettings().game.restoreWiiGlitches,
             tr_str("settings.gameplay.restore_wii_glitches_help"));
         addOption(tr_str("settings.gameplay.rotating_link_doll"), getSettings().game.enableLinkDollRotation,

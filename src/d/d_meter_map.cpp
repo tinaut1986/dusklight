@@ -682,9 +682,9 @@ void dMeterMap_c::draw() {
         const f32 scaledSizeX = sizeX * userHudScale;
         const f32 scaledSizeY = sizeY * userHudScale;
         const f32 mapBottomShift = sizeY - scaledSizeY;
-        mMapJ2DPicture->draw(mDoGph_gInf_c::ScaleHUDXLeft(drawPosX),
-                             drawPosY + mapBottomShift, scaledSizeX, scaledSizeY,
-                             false, false, false);
+        mMapJ2DPicture->draw(mDoGph_gInf_c::HUDEdgeLeft(drawPosX),
+                             mDoGph_gInf_c::HUDEdgeBottom(drawPosY + mapBottomShift),
+                             scaledSizeX, scaledSizeY, false, false, false);
         #else
         mMapJ2DPicture->draw(drawPosX, drawPosY, sizeX, sizeY, false, false, false);
         #endif

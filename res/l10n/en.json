@@ -959,7 +959,9 @@
       "livesplit": "LiveSplit Connection",
       "livesplit_help": "Connect to LiveSplit server on localhost:16834. For this to work you must right click LiveSplit, and turn on Control -> Start TCP Server. To see IGT in LiveSplit you must change your comparison to Game Time.",
       "show_rta": "Show RTA",
-      "show_rta_help": "Display the RTA timer. IGT is always visible."
+      "show_rta_help": "Display the RTA timer. IGT is always visible.",
+      "hud_margin": "HUD Margin",
+      "hud_margin_help": "Distance between the game HUD (hearts, buttons, minimap, rupees) and the screen edges. 100% is the original margin, made for old TVs that cut off the edges; lower values move it towards the edges."
     },
     "cheats": {
       "infinite_hearts": "Infinite Hearts",
