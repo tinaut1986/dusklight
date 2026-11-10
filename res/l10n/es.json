@@ -89,7 +89,8 @@
     },
     "filter_disc_images": "Imágenes de disco del juego",
     "filter_all_files": "Todos los archivos",
-    "base_version": " · base {version}"
+    "base_version": " · base {version}",
+    "quit_body": "¿Quieres cerrar Dusklight?"
   },
   "controller": {
     "port": "Puerto {number}",

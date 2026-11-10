@@ -89,7 +89,8 @@
     },
     "filter_disc_images": "Game Disc Images",
     "filter_all_files": "All Files",
-    "base_version": " · base {version}"
+    "base_version": " · base {version}",
+    "quit_body": "Close Dusklight?"
   },
   "controller": {
     "port": "Port {number}",

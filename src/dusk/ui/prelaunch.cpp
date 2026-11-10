@@ -1048,7 +1048,7 @@ void Prelaunch::build_menu_buttons() {
         apply_intro_animation(mMenuButtons.back()->root(), "delay-3");
 
         mMenuButtons.push_back(std::make_unique<Button>(menuList, i18n::tr_str("menu.quit")));
-        mMenuButtons.back()->on_pressed([] { IsRunning = false; });
+        mMenuButtons.back()->on_pressed([this] { confirm_quit(); });
         apply_intro_animation(mMenuButtons.back()->root(), "delay-4");
     }
 }
@@ -1310,7 +1310,45 @@ bool Prelaunch::visible() const {
     return mDocument->HasAttribute("open") && mRoot->HasAttribute("open");
 }
 
+void Prelaunch::confirm_quit() {
+    // Same dialog as the in-game Quit, with a start-screen message (there is
+    // no game progress to lose here). Cancel comes first and gets the focus.
+    const auto dismiss = [](Modal& modal) {
+        mDoAud_seStartMenu(kSoundWindowClose);
+        modal.pop();
+    };
+    push(std::make_unique<Modal>(Modal::Props{
+        .title = i18n::tr_str("modal.quit.title"),
+        .bodyText = i18n::tr_str("prelaunch.quit_body"),
+        .actions =
+            {
+                ModalAction{
+                    .label = i18n::tr_str("modal.quit.cancel"),
+                    .onPressed = dismiss,
+                },
+                ModalAction{
+                    .label = i18n::tr_str("modal.quit.quit"),
+                    .onPressed =
+                        [](Modal& modal) {
+                            mDoAud_seStartMenu(kSoundClick);
+                            modal.pop();
+                            IsRunning = false;
+                        },
+                },
+            },
+        .onDismiss = dismiss,
+        .icon = "question-mark",
+    }));
+}
+
 bool Prelaunch::handle_nav_command(Rml::Event& event, NavCommand cmd) {
+    if (cmd == NavCommand::Cancel) {
+        // B on the start menu asks to quit, like pressing Quit (the dialog
+        // plays its own open sound).
+        confirm_quit();
+        event.StopPropagation();
+        return true;
+    }
     int direction = 0;
     if (cmd == NavCommand::Down) {
         direction = 1;

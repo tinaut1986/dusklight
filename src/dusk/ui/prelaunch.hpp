@@ -28,6 +28,8 @@ public:
 
 protected:
     bool handle_nav_command(Rml::Event& event, NavCommand cmd) override;
+    // Fork: ask before closing Dusklight (Quit entry, or B on the menu).
+    void confirm_quit();
 
 private:
     bool mEntranceAnimationStarted = false;
