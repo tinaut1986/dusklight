@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace dusk::self_update {
 
@@ -18,6 +19,18 @@ namespace dusk::self_update {
  * executable and renamed over the old AppImage. The running copy keeps working
  * (its file stays open); the new version starts on the next launch.
  */
+
+/*
+ * Update check for the fork. Unlike borealis' check (which takes the most recently
+ * published release), this picks the highest *version* among stable releases and,
+ * when includeBeta is set, prereleases too. So a beta build is offered a newer
+ * stable, and a beta published after a newer stable never hides it.
+ */
+borealis::Task<borealis::update::Result> check_for_update(bool includeBeta);
+
+/* The selection used by check_for_update, on a GitHub /releases JSON array. */
+borealis::update::Result select_update(
+    std::string_view releasesJson, std::string_view currentVersion, bool includeBeta);
 
 enum class State {
     Idle,

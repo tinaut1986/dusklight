@@ -29,7 +29,10 @@ with no fork changes is usually a minor bump, fixes to fork code a patch bump.
   publishes a **release** and becomes `/releases/latest`.
 
 Beta builds look for beta updates; stable builds only see stable releases unless
-the player enables Settings → Interface → Beta Updates.
+the player enables Settings → Interface → Beta Updates. Either way the updater
+offers the **highest version** among the candidates, not the most recently
+published one: a beta build is offered a newer stable, and a beta published
+after a newer stable never hides it (`src/dusk/update_select.cpp`).
 
 ## Publishing
 

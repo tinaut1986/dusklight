@@ -212,8 +212,9 @@ void begin_update_check() {
     constexpr bool kBetaBuild = false;
 #endif
     // Beta builds always follow betas; stable builds only if the user opts in.
-    sUpdateCheck = borealis::update::check_latest_github_release(AppInfo,
-        {.includePrereleases = kBetaBuild || getSettings().backend.betaUpdates.getValue()});
+    // Either way the highest version wins, so a beta build is offered a newer stable.
+    sUpdateCheck = self_update::check_for_update(
+        kBetaBuild || getSettings().backend.betaUpdates.getValue());
 }
 
 std::optional<borealis::update::Result> take_finished_update_check() {

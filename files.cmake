@@ -1562,6 +1562,7 @@ set(DUSK_FILES
         src/dusk/save_manager.hpp
         src/dusk/self_update.cpp
         src/dusk/self_update.hpp
+        src/dusk/update_select.cpp
         src/dusk/settings.cpp
         src/dusk/speedrun.cpp
         src/dusk/stubs.cpp

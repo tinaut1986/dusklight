@@ -7,6 +7,7 @@
 #include <borealis/io.hpp>
 #include <borealis/log.hpp>
 #include <borealis/task.hpp>
+#include <borealis/version.h>
 
 #include <algorithm>
 #include <array>
@@ -139,6 +140,45 @@ VerifyResult verify_and_install(const std::filesystem::path& partial,
 }
 
 }  // namespace
+
+borealis::Task<borealis::update::Result> check_for_update(bool includeBeta) {
+    using borealis::update::Result;
+    using borealis::update::Status;
+    if (!borealis::http::available()) {
+        return borealis::spawn([](borealis::TaskContext&) {
+            return Result{.status = Status::Disabled, .message = "No HTTP backend is available"};
+        });
+    }
+    // Newest 30 releases are plenty: we only need the highest version among them.
+    const std::string url = std::string{"https://api.github.com/repos/"} +
+                            std::string{AppInfo.githubOwner} + "/" +
+                            std::string{AppInfo.githubRepo} + "/releases?per_page=30";
+    return borealis::http::start({
+                                     .url = url,
+                                     .headers =
+                                         {
+                                             {.name = "User-Agent",
+                                                 .value = borealis::user_agent(AppInfo)},
+                                             {.name = "Accept",
+                                                 .value = "application/vnd.github+json"},
+                                         },
+                                     .connectTimeout = std::chrono::seconds{10},
+                                     .idleTimeout = std::chrono::seconds{10},
+                                     .totalTimeout = std::chrono::seconds{20},
+                                     .maxBodyBytes = 8 * 1024 * 1024,
+                                 })
+        .map([includeBeta](borealis::http::Result response) {
+            if (response.error != borealis::http::Error::None) {
+                return Result{.status = Status::Failed, .message = std::move(response.message)};
+            }
+            if (response.response.statusCode != 200) {
+                return Result{.status = Status::Failed,
+                    .message = "GitHub returned HTTP " +
+                               std::to_string(response.response.statusCode)};
+            }
+            return select_update(response.response.body, BOREALIS_APP_DESCRIBE, includeBeta);
+        });
+}
 
 bool supported() noexcept {
 #if DUSK_SELF_UPDATE_PLATFORM
