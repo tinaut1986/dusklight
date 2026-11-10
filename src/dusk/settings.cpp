@@ -175,6 +175,10 @@ UserSettings g_userSettings = {
         .lastSelectedGameModeId {"game.lastSelectedGameModeId", gamemode::kVanillaGameModeId}
     },
 
+    .ui = {
+        .menuLanguage {"ui.menuLanguage", MenuLanguage::Auto},
+    },
+
     .backend = {
         .isoPath {"backend.isoPath", ""},
         .isoVerification {"backend.isoVerification", DiscVerificationState::Unknown},
@@ -432,6 +436,8 @@ void registerSettings() {
     Register(g_userSettings.actionBindings.turboSpeedButton[1]);
     Register(g_userSettings.actionBindings.turboSpeedButton[2]);
     Register(g_userSettings.actionBindings.turboSpeedButton[3]);
+
+    Register(g_userSettings.ui.menuLanguage);
 }
 
 // Transient settings
