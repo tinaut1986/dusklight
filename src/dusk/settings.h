@@ -183,6 +183,9 @@ struct UserSettings {
         ConfigVar<bool> rememberWindowSize;
         ConfigVar<int> lastWindowWidth;
         ConfigVar<int> lastWindowHeight;
+        // Fork: last windowed position (INT32_MIN = not saved).
+        ConfigVar<int> lastWindowX;
+        ConfigVar<int> lastWindowY;
         ConfigVar<int> uiScale;
     } video;
 

@@ -18,6 +18,7 @@
 #include "dusk/audio/DuskDsp.hpp"
 #include "dusk/config.hpp"
 #include "dusk/data.hpp"
+#include "dusk/display.hpp"
 #include "dusk/discord_presence.hpp"
 #include "dusk/hotkeys.h"
 #include "dusk/imgui/ImGuiEngine.hpp"
@@ -736,21 +737,57 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
 
         leftPane.add_section(tr_str("settings.section.display"));
 
-        leftPane.register_control(leftPane.add_button(tr_str("settings.video.toggle_fullscreen")).on_pressed([] {
-            mDoAud_seStartMenu(kSoundItemChange);
-            getSettings().video.enableFullscreen.setValue(!getSettings().video.enableFullscreen);
-            VISetWindowFullscreen(getSettings().video.enableFullscreen);
-            config::save();
-        }),
-            rightPane, [](Pane& pane) { pane.clear(); });
-        leftPane.register_control(leftPane.add_button(tr_str("settings.video.restore_window_size")).on_pressed([] {
-            mDoAud_seStartMenu(kSoundItemChange);
-            getSettings().video.enableFullscreen.setValue(false);
-            VISetWindowFullscreen(false);
-            VISetWindowSize(FB_WIDTH * 2, FB_HEIGHT * 2);
-            VICenterWindow();
-        }),
-            rightPane, [](Pane& pane) { pane.clear(); });
+        // Fork: a Display Mode selector (saved, applied at startup) instead of a
+        // toggle that did not show the current mode. Locked to fullscreen in
+        // Steam's Game Mode, where a window has no use.
+        leftPane.register_control(
+            leftPane.add_select_button({
+                .key = tr_str("settings.video.display_mode"),
+                .getValue =
+                    [] {
+                        return tr_str(display::fullscreen() ? "settings.video.display_fullscreen"
+                                                            : "settings.video.display_windowed");
+                    },
+                .isDisabled = [] { return IsMobile || display::fullscreen_locked(); },
+                .isModified =
+                    [] {
+                        return !display::fullscreen_locked() &&
+                               getSettings().video.enableFullscreen.getValue() !=
+                                   getSettings().video.enableFullscreen.getDefaultValue();
+                    },
+            }),
+            rightPane, [](Pane& pane) {
+                pane.clear();
+                if (!display::fullscreen_locked()) {
+                    for (const bool full : {false, true}) {
+                        pane.add_button({
+                                .text = tr_str(full ? "settings.video.display_fullscreen"
+                                                    : "settings.video.display_windowed"),
+                                .isSelected = [full] { return display::fullscreen() == full; },
+                            })
+                            .on_pressed([full] {
+                                mDoAud_seStartMenu(kSoundItemChange);
+                                display::set_fullscreen(full);
+                            });
+                    }
+                }
+                pane.add_text(tr_str(display::fullscreen_locked()
+                                         ? "settings.video.display_mode_locked"
+                                         : "settings.video.display_mode_help"));
+            });
+        leftPane.register_control(
+            leftPane.add_button({
+                    .text = tr_str("settings.video.restore_window_size"),
+                    .isDisabled = [] { return IsMobile || display::fullscreen_locked(); },
+                })
+                .on_pressed([] {
+                    mDoAud_seStartMenu(kSoundItemChange);
+                    display::restore_default_window();
+                }),
+            rightPane, [](Pane& pane) {
+                pane.clear();
+                pane.add_text(tr_str("settings.video.restore_window_size_help"));
+            });
         config_bool_select(leftPane, rightPane, getSettings().video.enableVsync,
             {
                 .key = tr_str("settings.video.vsync"),
@@ -823,21 +860,8 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
                 }
                 pane.add_rml(tr_str("settings.video.fps_counter_help"));
             });
-        config_bool_select(leftPane, rightPane, getSettings().video.rememberWindowSize,
-            {
-                .key = tr_str("settings.video.remember_window_size"),
-                .helpText = tr_str("settings.video.remember_window_size_help"),
-                .onChange =
-                    [](bool value) {
-                        if (value && !getSettings().video.enableFullscreen) {
-                            const auto windowSize = aurora::window::get_window_size();
-                            getSettings().video.lastWindowWidth.setValue(windowSize.width);
-                            getSettings().video.lastWindowHeight.setValue(windowSize.height);
-                            config::save();
-                        }
-                    },
-                .isDisabled = [] { return IsMobile; },
-            });
+        // Fork: the windowed size and position are always remembered
+        // (dusk/display.cpp); the "Remember Window Size" toggle is gone.
 
         config_int_select(leftPane, rightPane, getSettings().video.uiScale,
             tr_str("settings.video.ui_scale"),

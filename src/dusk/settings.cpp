@@ -21,6 +21,8 @@ UserSettings g_userSettings = {
         .rememberWindowSize {"video.rememberWindowSize", false},
         .lastWindowWidth {"video.lastWindowWidth", 0},
         .lastWindowHeight {"video.lastWindowHeight", 0},
+        .lastWindowX {"video.lastWindowX", INT32_MIN},
+        .lastWindowY {"video.lastWindowY", INT32_MIN},
         .uiScale {"video.uiScale", 100},
     },
 
@@ -267,6 +269,8 @@ void registerSettings() {
     Register(g_userSettings.video.rememberWindowSize);
     Register(g_userSettings.video.lastWindowWidth);
     Register(g_userSettings.video.lastWindowHeight);
+    Register(g_userSettings.video.lastWindowX);
+    Register(g_userSettings.video.lastWindowY);
     Register(g_userSettings.video.uiScale,
         [](const int&, const int&) { dusk::ui::apply_scale(); });
 

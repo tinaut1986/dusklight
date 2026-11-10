@@ -1430,6 +1430,8 @@ set(DUSK_FILES
         src/dusk/config.hpp
         src/dusk/data.cpp
         src/dusk/data.hpp
+        src/dusk/display.cpp
+        src/dusk/display.hpp
         src/dusk/discord_presence.cpp
         src/dusk/dvd_asset.cpp
         src/dusk/dvd_asset.hpp

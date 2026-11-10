@@ -6,6 +6,7 @@
 #include "dusk/action_bindings.h"
 #include "dusk/config.hpp"
 #include "dusk/data.hpp"
+#include "dusk/display.hpp"
 #include "dusk/game_mode.hpp"
 #include "dusk/livesplit.h"
 #include "dusk/main.h"
@@ -269,9 +270,7 @@ namespace dusk {
         UpdateSettings();
 
         if (ImGui::IsKeyPressed(ImGuiKey_F11)) {
-            getSettings().video.enableFullscreen.setValue(!getSettings().video.enableFullscreen);
-            VISetWindowFullscreen(getSettings().video.enableFullscreen);
-            config::save();
+            display::set_fullscreen(!display::fullscreen());  // fork: locked in Game Mode
         }
 
         if (getSettings().game.enableResetKeybind && ImGui::GetIO().KeyCtrl &&

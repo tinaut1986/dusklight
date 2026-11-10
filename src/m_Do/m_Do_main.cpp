@@ -42,6 +42,7 @@
 #include "dusk/commands.hpp"
 #include "dusk/config.hpp"
 #include "dusk/data.hpp"
+#include "dusk/display.hpp"
 #include "dusk/discord_presence.hpp"
 #include "dusk/dusk.h"
 #include "dusk/game_clock.h"
@@ -164,6 +165,10 @@ bool launchUILoop() {
             case AURORA_DISPLAY_SCALE_CHANGED:
                 dusk::ImGuiEngine_Initialize(event->windowSize.scale);
                 break;
+            case AURORA_WINDOW_RESIZED:
+            case AURORA_WINDOW_MOVED:
+                dusk::display::handle_aurora_event(*event);
+                break;
             case AURORA_EXIT:
                 return false;
             }
@@ -254,11 +259,8 @@ void main01(void) {
                 dusk::g_imguiConsole.HandleSDLEvent(event->sdl);
                 break;
             case AURORA_WINDOW_RESIZED:
-                if (dusk::getSettings().video.rememberWindowSize && !dusk::getSettings().video.enableFullscreen) {
-                    dusk::getSettings().video.lastWindowWidth.setValue(event->windowSize.width);
-                    dusk::getSettings().video.lastWindowHeight.setValue(event->windowSize.height);
-                    dusk::config::save();
-                }
+            case AURORA_WINDOW_MOVED:
+                dusk::display::handle_aurora_event(*event);
                 break;
             case AURORA_DISPLAY_SCALE_CHANGED:
                 dusk::ImGuiEngine_Initialize(event->windowSize.scale);
@@ -686,20 +688,9 @@ int game_main(int argc, char* argv[]) {
         config.resourcesPath = DUSK_ASSET_DIR;
 #endif
         config.vsync = dusk::getSettings().video.enableVsync;
-        config.startFullscreen = dusk::getSettings().video.enableFullscreen;
-        config.windowPosX = -1;
-        config.windowPosY = -1;
-
-        const int lastWindowWidth = dusk::getSettings().video.lastWindowWidth.getValue();
-        const int lastWindowHeight = dusk::getSettings().video.lastWindowHeight.getValue();
-
-        if (dusk::getSettings().video.rememberWindowSize && lastWindowWidth > 0 && lastWindowHeight > 0) {
-            config.windowWidth = lastWindowWidth;
-            config.windowHeight = lastWindowHeight;
-        } else {
-            config.windowWidth = defaultWindowWidth * 2;
-            config.windowHeight = defaultWindowHeight * 2;
-        }
+        // Fork: saved display mode, windowed size and position; fullscreen is
+        // forced in Steam's Game Mode (see dusk/display.hpp).
+        dusk::display::fill_startup_config(config, defaultWindowWidth * 2, defaultWindowHeight * 2);
 
         config.desiredBackend = ResolveDesiredBackend(parsed_arg_options);
         config.logCallback = borealis::log::aurora_callback();
@@ -711,6 +702,7 @@ int game_main(int argc, char* argv[]) {
         config.imGuiInitCallback = &aurora_imgui_init_callback;
         config.allowTextureDumps = false;
         auroraInfo = aurora_initialize(argc, argv, &config);
+        dusk::display::after_window_created();
     }
 
     dusk::presentation::update_frame_rate_preference();

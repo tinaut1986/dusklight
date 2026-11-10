@@ -761,7 +761,6 @@
       "data_migrated_note": "Data will be migrated automatically on restart."
     },
     "video": {
-      "toggle_fullscreen": "Toggle Fullscreen",
       "restore_window_size": "Restore Default Window Size",
       "vsync": "Enable VSync",
       "vsync_help": "Synchronizes the frame rate to your monitor's refresh rate.",
@@ -771,8 +770,6 @@
       "pause_on_focus_lost_help": "Pause the game when window focus is lost.",
       "show_fps_counter": "Show FPS Counter",
       "fps_counter_help": "<br/>Display the current framerate in a corner of the screen while playing.",
-      "remember_window_size": "Remember Window Size",
-      "remember_window_size_help": "Save and restore the previous session's window size when opening Dusklight.",
       "ui_scale": "UI Scale",
       "ui_scale_help": "Scales the Dusklight interface relative to the display's DPI scale. Has no effect on the game's UI and HUD.",
       "internal_resolution": "Internal Resolution",
@@ -798,7 +795,13 @@
       "disable_pillarboxing": "Disable Cutscene Pillarboxing",
       "disable_pillarboxing_help": "Disable black bars on the left and right sides of the screen during some cutscenes, particularly on ultra-wide displays. Visuals beyond the original intended framing may appear buggy.",
       "disable_letterboxing": "Disable Letterboxing",
-      "disable_letterboxing_help": "<br/>Disable the top and bottom black bars during L-targeting, aiming, cutscenes, dialogue, etc."
+      "disable_letterboxing_help": "<br/>Disable the top and bottom black bars during L-targeting, aiming, cutscenes, dialogue, etc.",
+      "display_mode": "Display Mode",
+      "display_windowed": "Windowed",
+      "display_fullscreen": "Fullscreen",
+      "display_mode_help": "Saved and used the next time Dusklight starts. A window also keeps its size and position.",
+      "display_mode_locked": "Always fullscreen in Steam's Game Mode, where a window has no use. Your saved choice still applies in Desktop Mode and on PC.",
+      "restore_window_size_help": "Switches to a window at the default size, centred."
     },
     "fps_corner": {
       "top_left": "Top Left",

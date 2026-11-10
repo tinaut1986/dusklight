@@ -761,7 +761,6 @@
       "data_migrated_note": "Los datos se migrarán automáticamente al reiniciar."
     },
     "video": {
-      "toggle_fullscreen": "Alternar pantalla completa",
       "restore_window_size": "Restaurar tamaño de ventana",
       "vsync": "Activar VSync",
       "vsync_help": "Sincroniza la tasa de fotogramas con la frecuencia de actualización de tu monitor.",
@@ -771,8 +770,6 @@
       "pause_on_focus_lost_help": "Pausa el juego cuando la ventana pierde el foco.",
       "show_fps_counter": "Mostrar contador de FPS",
       "fps_counter_help": "<br/>Muestra la tasa de fotogramas actual en una esquina de la pantalla mientras juegas.",
-      "remember_window_size": "Recordar tamaño de ventana",
-      "remember_window_size_help": "Guarda y restaura el tamaño de ventana de la sesión anterior al abrir Dusklight.",
       "ui_scale": "Escala de la interfaz",
       "ui_scale_help": "Escala la interfaz de Dusklight respecto a la escala de PPP de la pantalla. No afecta a la interfaz ni al HUD del juego.",
       "internal_resolution": "Resolución interna",
@@ -798,7 +795,13 @@
       "disable_pillarboxing": "Desactivar bandas en escenas cinemáticas",
       "disable_pillarboxing_help": "Desactiva las barras negras de los laterales de la pantalla durante algunas cinemáticas, especialmente en pantallas ultraanchas. Lo que quede fuera del encuadre original puede verse defectuoso.",
       "disable_letterboxing": "Desactivar bandas cinematográficas",
-      "disable_letterboxing_help": "<br/>Desactiva las barras negras superiores e inferiores durante la puntería con L, apuntados, cinemáticas, diálogos, etc."
+      "disable_letterboxing_help": "<br/>Desactiva las barras negras superiores e inferiores durante la puntería con L, apuntados, cinemáticas, diálogos, etc.",
+      "display_mode": "Modo de pantalla",
+      "display_windowed": "Ventana",
+      "display_fullscreen": "Pantalla completa",
+      "display_mode_help": "Se guarda y se usa la próxima vez que arranque Dusklight. La ventana conserva además su tamaño y su posición.",
+      "display_mode_locked": "En el modo Juego de Steam siempre es pantalla completa, porque una ventana no tiene sentido. Tu elección guardada se sigue usando en el modo Escritorio y en el PC.",
+      "restore_window_size_help": "Cambia a una ventana del tamaño por defecto, centrada."
     },
     "fps_corner": {
       "top_left": "Arriba a la izquierda",
