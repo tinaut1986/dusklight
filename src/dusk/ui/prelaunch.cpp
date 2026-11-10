@@ -923,6 +923,23 @@ Prelaunch::Prelaunch() : Document(kDocumentSource, false, DocumentScope::Prelaun
     mUpdateMessage = mDocument->GetElementById("update-message");
     mUpdateDownload = mDocument->GetElementById("update-download");
     mUpdateDownloadLabel = mDocument->GetElementById("update-download-label");
+    {
+        // Fork: the update button takes D-pad focus like the menu entries.
+        static const bool registered = register_scoped_styles(DocumentScope::Prelaunch,
+            "fork-update-focus", R"RCSS(
+#update-download {
+    focus: auto;
+    tab-index: auto;
+}
+#update-download:focus-visible {
+    color: var(--color-black);
+    decorator: var(--menu-button-decorator-hover);
+}
+)RCSS");
+        if (registered) {
+            apply_scoped_styles(*this);
+        }
+    }
 
     if (mUpdateDownload != nullptr) {
         listen(mUpdateDownload, Rml::EventId::Click, [](Rml::Event& event) {
@@ -1185,7 +1202,7 @@ void Prelaunch::update() {
         if (!baseStr.empty() && baseStr[0] == 'v') {
             baseStr = baseStr.substr(1);
         }
-        Rml::String text{versionStr};
+        Rml::String text = "\u00A0" + Rml::String{versionStr};
         if (!baseStr.empty() && baseStr != "unknown") {
             text += fmt::format(fmt::runtime(i18n::tr_source("prelaunch.base_version")),
                 fmt::arg("version", baseStr));
@@ -1296,15 +1313,28 @@ bool Prelaunch::handle_nav_command(Rml::Event& event, NavCommand cmd) {
             break;
         }
     }
-    const auto n = static_cast<int>(mMenuButtons.size());
+    // Fork: the update button ("Install X") is reachable with the D-pad, after
+    // the last menu entry, whenever it is shown.
+    const bool updateShown = mUpdateDownload != nullptr && mUpdateStatus != nullptr &&
+                             mUpdateStatus->GetAttribute<Rml::String>("state", "") == "available";
+    const auto menuCount = static_cast<int>(mMenuButtons.size());
+    if (updateShown) {
+        for (auto* e = target; e != nullptr; e = e->GetParentNode()) {
+            if (e == mUpdateDownload) {
+                focusedButton = menuCount;
+                break;
+            }
+        }
+    }
+    const auto n = menuCount + (updateShown ? 1 : 0);
     int i = ((focusedButton + direction) % n + n) % n;
-    while (i >= 0 && i < mMenuButtons.size()) {
-        if (mMenuButtons[i]->focus()) {
+    for (int tries = 0; tries < n; ++tries, i = ((i + direction) % n + n) % n) {
+        const bool focused = i == menuCount ? mUpdateDownload->Focus() : mMenuButtons[i]->focus();
+        if (focused) {
             mDoAud_seStartMenu(kSoundItemFocus);
             event.StopPropagation();
             return true;
         }
-        i += direction;
     }
     return false;
 }

@@ -359,7 +359,15 @@ private:
 
 void open_changelog(ChangelogMode mode) {
     ensure_styles();
-    auto& doc = push_document(std::make_unique<ChangelogModal>(mode));
+    auto modal = std::make_unique<ChangelogModal>(mode);
+    Document& doc = *modal;
+    // Like the start screen's own modals: push over the top document and cover
+    // it. A bare push_document left the window behind the start screen.
+    if (auto* host = top_document()) {
+        host->push(std::move(modal));
+    } else {
+        push_document(std::move(modal));
+    }
     apply_scoped_styles(doc);
     doc.focus();
 }

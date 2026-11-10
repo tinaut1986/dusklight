@@ -1,5 +1,6 @@
 #include "input.hpp"
 
+#include "document.hpp"
 #include "ui.hpp"
 
 #include <RmlUi/Core.h>
@@ -595,8 +596,36 @@ bool touch_moved_too_far(
     return delta.SquaredMagnitude() > threshold * threshold;
 }
 
+// Fork: a click or tap on empty space leaves focus on no control (the root or a
+// document itself), and the D-pad then had nothing to move from. The first
+// navigation press gives focus back to the top document's default control and
+// does nothing else, so it never activates something by surprise.
+bool restore_lost_focus(Rml::Context& context, Rml::Input::KeyIdentifier key) noexcept {
+    switch (key) {
+    case Rml::Input::KI_UP:
+    case Rml::Input::KI_DOWN:
+    case Rml::Input::KI_LEFT:
+    case Rml::Input::KI_RIGHT:
+    case Rml::Input::KI_RETURN:
+        break;
+    default:
+        return false;
+    }
+    auto* focused = context.GetFocusElement();
+    const bool lost = focused == nullptr || focused == context.GetRootElement() ||
+                      focused == focused->GetOwnerDocument();
+    if (!lost) {
+        return false;
+    }
+    auto* document = top_document();
+    return document != nullptr && document->visible() && document->focus();
+}
+
 void emit_key_press(Rml::Context& context, Rml::Input::KeyIdentifier key) noexcept {
     context.ProcessMouseLeave();
+    if (restore_lost_focus(context, key)) {
+        return;
+    }
     context.ProcessKeyDown(key, 0);
 }
 
