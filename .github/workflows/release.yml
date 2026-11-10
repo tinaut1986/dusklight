@@ -122,8 +122,11 @@ jobs:
         run: |
           TAG="${{ steps.vars.outputs.tag }}"
           BASE="${{ steps.vars.outputs.base }}"
-          PREV=$(git describe --tags --abbrev=0 --match 'v*+base.*' "${TAG}^" 2>/dev/null || true)
-          RANGE="${PREV:+${PREV}..}${TAG}"
+          # Previous fork release reachable through any parent (a stable tag sits
+          # on a merge into main; the beta it promotes is on the second parent).
+          # With none, start at the upstream base so upstream history stays out.
+          PREV=$(git describe --tags --abbrev=0 --match 'v*+base.*' --exclude "$TAG" "$TAG" 2>/dev/null || true)
+          RANGE="${PREV:-$BASE}..${TAG}"
           {
             if [ "${{ steps.vars.outputs.prerelease }}" = "true" ]; then
               echo "> **Beta build.** It comes from the \`release\` branch and has not been"
