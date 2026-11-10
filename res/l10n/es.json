@@ -1041,7 +1041,10 @@
       "recording_mode": "Modo grabación",
       "recording_mode_help": "Desactiva el HUD del juego y toda la música de fondo.<br/><br/>Útil para grabar videos.",
       "beta_updates": "Actualizaciones beta",
-      "beta_updates_help": "Ofrece también versiones beta al buscar actualizaciones. Las betas reciben antes las novedades y los cambios del proyecto original, pero pueden tener fallos."
+      "beta_updates_help": "Ofrece también versiones beta al buscar actualizaciones. Las betas reciben antes las novedades y los cambios del proyecto original, pero pueden tener fallos.",
+      "changelog": "Lista de cambios",
+      "changelog_help_stable": "Todas las versiones hasta la última estable, de la más nueva a la más antigua. Incluye las betas que llevaron a ella.",
+      "changelog_help_beta": "Todas las versiones hasta la más nueva, beta o estable, de la más nueva a la más antigua."
     },
     "scaling_mode": {
       "gamecube": "GameCube",
@@ -1155,5 +1158,17 @@
     "auto_resolution": "Automática ({width}×{height})",
     "resampler_bilinear": "Bilineal",
     "resampler_area": "Área"
+  },
+  "changelog": {
+    "title_whats_new": "Novedades",
+    "title_history": "Lista de cambios",
+    "loading": "Cargando la lista de cambios...",
+    "failed": "No se pudo cargar la lista de cambios. Comprueba la conexión.",
+    "empty": "Todavía no hay versiones en tu canal.",
+    "up_to_date": "Ya tienes la última versión.",
+    "no_notes": "Esta versión no tiene notas.",
+    "close": "Cerrar",
+    "beta": "BETA",
+    "base": "base {version}"
   }
 }

@@ -1,6 +1,7 @@
 #include "settings.hpp"
 
 #include "bool_button.hpp"
+#include "changelog_window.hpp"
 #include "controller_config.hpp"
 #include "graphics_tuner.hpp"
 #include "menu_bar.hpp"
@@ -24,6 +25,7 @@
 #include "dusk/ui/i18n.hpp"
 #include "dusk/livesplit.h"
 #include "dusk/presentation.hpp"
+#include "dusk/self_update.hpp"
 #include "dusk/speedrun.h"
 
 #include <aurora/gfx.h>
@@ -1628,6 +1630,16 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
             {
                 .key = tr_str("settings.interface.beta_updates"),
                 .helpText = tr_str("settings.interface.beta_updates_help"),
+            });
+        leftPane.register_control(
+            leftPane.add_button(tr_str("settings.interface.changelog")).on_pressed([] {
+                mDoAud_seStartMenu(kSoundClick);
+                open_changelog(ChangelogMode::History);
+            }),
+            rightPane, [](Pane& pane) {
+                pane.add_text(tr_str(self_update::follows_betas()
+                                         ? "settings.interface.changelog_help_beta"
+                                         : "settings.interface.changelog_help_stable"));
             });
 #if BOREALIS_HAS_DISCORD
         config_bool_select(leftPane, rightPane, getSettings().game.enableDiscordPresence,

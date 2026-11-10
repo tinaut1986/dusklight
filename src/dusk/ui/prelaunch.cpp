@@ -12,6 +12,7 @@
 #include "dusk/settings.h"
 #include "dusk/ui/format.hpp"
 #include "dusk/ui/menu_bar.hpp"
+#include "changelog_window.hpp"
 #include "i18n.hpp"
 #include "mod_updates.hpp"
 #include "modal.hpp"
@@ -141,7 +142,7 @@ struct DiscVerificationTask {
 std::unique_ptr<DiscVerificationTask> sDiscVerificationTask;
 bool sDiscVerificationModalPushed = false;
 
-borealis::Task<borealis::update::Result> sUpdateCheck;
+borealis::Task<self_update::UpdateCheck> sUpdateCheck;
 std::optional<borealis::update::Result> sUpdateCheckResult;
 
 bool verification_state_allows_launch(iso::ValidationError validation) noexcept {
@@ -206,15 +207,10 @@ void begin_update_check() {
     if (sUpdateCheck || sUpdateCheckResult.has_value()) {
         return;
     }
-#if defined(DUSK_BETA_BUILD) && DUSK_BETA_BUILD
-    constexpr bool kBetaBuild = true;
-#else
-    constexpr bool kBetaBuild = false;
-#endif
     // Beta builds always follow betas; stable builds only if the user opts in.
     // Either way the highest version wins, so a beta build is offered a newer stable.
-    sUpdateCheck = self_update::check_for_update(
-        kBetaBuild || getSettings().backend.betaUpdates.getValue());
+    sUpdateCheck =
+        self_update::check_for_update(self_update::follows_betas(), i18n::current_language());
 }
 
 std::optional<borealis::update::Result> take_finished_update_check() {
@@ -222,9 +218,20 @@ std::optional<borealis::update::Result> take_finished_update_check() {
         return std::nullopt;
     }
 
-    auto result = sUpdateCheck.try_take();
+    std::optional<self_update::UpdateCheck> check;
+    try {
+        check = sUpdateCheck.try_take();
+    } catch (const std::exception& e) {
+        check = self_update::UpdateCheck{.result = {.status = borealis::update::Status::Failed,
+                                             .message = e.what()}};
+    }
     sUpdateCheck = {};
-    return result;
+    if (!check) {
+        return std::nullopt;
+    }
+    // Keep the notes for the What's New / changelog window.
+    self_update::set_last_check(*check);
+    return std::move(check->result);
 }
 
 std::string update_release_label(const borealis::update::Release& release) {
@@ -261,6 +268,22 @@ void open_update_release() {
     if (!SDL_OpenURL(url.c_str())) {
         PrelaunchLog.warn("Failed to open update URL '{}': {}", url, SDL_GetError());
     }
+}
+
+// Fork: show What's New (with the install action) before installing, when the
+// releases since this version have notes.
+void on_update_button() {
+    if (self_update::state() == self_update::State::Downloading ||
+        self_update::state() == self_update::State::Verifying ||
+        self_update::state() == self_update::State::Installed)
+    {
+        return;
+    }
+    if (has_whats_new()) {
+        open_changelog(ChangelogMode::WhatsNew, [] { open_update_release(); });
+        return;
+    }
+    open_update_release();
 }
 
 std::string get_error_msg(iso::ValidationError error) {
@@ -903,12 +926,12 @@ Prelaunch::Prelaunch() : Document(kDocumentSource, false, DocumentScope::Prelaun
 
     if (mUpdateDownload != nullptr) {
         listen(mUpdateDownload, Rml::EventId::Click, [](Rml::Event& event) {
-            open_update_release();
+            on_update_button();
             event.StopPropagation();
         });
         listen(mUpdateDownload, Rml::EventId::Keydown, [](Rml::Event& event) {
             if (map_nav_event(event) == NavCommand::Confirm) {
-                open_update_release();
+                on_update_button();
                 event.StopPropagation();
             }
         });

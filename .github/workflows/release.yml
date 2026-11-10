@@ -119,39 +119,11 @@ jobs:
           ls -la dist
 
       - name: Release notes
+        # The in-game What's New window reads the notes blocks this writes
+        # (see ci/fork-release-notes.sh and docs/release-notes/README.md).
         run: |
-          TAG="${{ steps.vars.outputs.tag }}"
-          BASE="${{ steps.vars.outputs.base }}"
-          # Previous fork release reachable through any parent (a stable tag sits
-          # on a merge into main; the beta it promotes is on the second parent).
-          # With none, start at the upstream base so upstream history stays out.
-          PREV=$(git describe --tags --abbrev=0 --match 'v*+base.*' --exclude "$TAG" "$TAG" 2>/dev/null || true)
-          RANGE="${PREV:-$BASE}..${TAG}"
-          {
-            if [ "${{ steps.vars.outputs.prerelease }}" = "true" ]; then
-              echo "> **Beta build.** It comes from the \`release\` branch and has not been"
-              echo "> merged into \`main\` yet, so it is not a stable version."
-              echo
-            fi
-            echo "Based on [TwilitRealm/dusklight ${BASE}](https://github.com/TwilitRealm/dusklight/releases/tag/${BASE})."
-            echo
-            echo "## Install"
-            echo
-            echo "- Linux / Steam Deck: \`${{ steps.vars.outputs.asset }}\`"
-            echo "- Already installed from an AppImage: the game offers to install this"
-            echo "  version from its start screen, verified against the SHA-256 digest"
-            echo "  GitHub publishes for the file (also attached as \`.sha256\`)."
-            echo
-            echo "## Changes"
-            echo
-            if [ -n "$PREV" ]; then
-              echo "Since ${PREV}:"
-              echo
-            fi
-            # First parent only: upstream merges show as one line instead of
-            # hundreds of upstream commits.
-            git log --first-parent --pretty='- %s (%h)' ${RANGE}
-          } > release_notes.md
+          bash ci/fork-release-notes.sh "${{ steps.vars.outputs.tag }}" \
+            "${{ steps.vars.outputs.prerelease }}" "${{ steps.vars.outputs.asset }}" > release_notes.md
           cat release_notes.md
 
       - name: Upload build artifacts

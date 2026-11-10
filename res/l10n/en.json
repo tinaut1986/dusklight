@@ -1041,7 +1041,10 @@
       "recording_mode": "Recording Mode",
       "recording_mode_help": "Disables the game HUD and all background music.<br/><br/>Useful for recording footage.",
       "beta_updates": "Beta Updates",
-      "beta_updates_help": "Also offer beta builds when checking for updates. Betas get new features and upstream changes first, but may have bugs."
+      "beta_updates_help": "Also offer beta builds when checking for updates. Betas get new features and upstream changes first, but may have bugs.",
+      "changelog": "Changelog",
+      "changelog_help_stable": "Every release up to the newest stable one, newest first. Betas that led to it are included.",
+      "changelog_help_beta": "Every release up to the newest one, beta or stable, newest first."
     },
     "scaling_mode": {
       "gamecube": "GameCube",
@@ -1155,5 +1158,17 @@
     "auto_resolution": "Auto ({width}×{height})",
     "resampler_bilinear": "Bilinear",
     "resampler_area": "Area"
+  },
+  "changelog": {
+    "title_whats_new": "What's New",
+    "title_history": "Changelog",
+    "loading": "Loading release notes...",
+    "failed": "Could not load the release notes. Check your connection.",
+    "empty": "No releases in your channel yet.",
+    "up_to_date": "You have the latest version.",
+    "no_notes": "No notes for this version.",
+    "close": "Close",
+    "beta": "BETA",
+    "base": "base {version}"
   }
 }
