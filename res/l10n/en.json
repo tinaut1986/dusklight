@@ -62,7 +62,8 @@
       "downloading": "Downloading update... {percent}%",
       "verifying": "Verifying update...",
       "installed": "Version {version} installed. Restart Dusklight to use it.",
-      "install_failed": "Could not install the update"
+      "install_failed": "Could not install the update",
+      "retry": "Retry"
     },
     "verify_modal": {
       "title": "Disc verification warning",

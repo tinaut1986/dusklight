@@ -62,7 +62,8 @@
       "downloading": "Descargando actualización... {percent}%",
       "verifying": "Verificando actualización...",
       "installed": "Versión {version} instalada. Reinicia Dusklight para usarla.",
-      "install_failed": "No se pudo instalar la actualización"
+      "install_failed": "No se pudo instalar la actualización",
+      "retry": "Reintentar"
     },
     "verify_modal": {
       "title": "Advertencia de verificación del disco",

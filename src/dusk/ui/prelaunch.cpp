@@ -273,6 +273,15 @@ void open_update_release() {
 // Fork: show What's New (with the install action) before installing, when the
 // releases since this version have notes.
 void on_update_button() {
+    // Fork: after a failed check (no connection at startup...) the button retries.
+    if (sUpdateCheckResult.has_value() &&
+        sUpdateCheckResult->status == borealis::update::Status::Failed)
+    {
+        mDoAud_seStartMenu(kSoundClick);
+        sUpdateCheckResult.reset();
+        begin_update_check();
+        return;
+    }
     if (self_update::state() == self_update::State::Downloading ||
         self_update::state() == self_update::State::Verifying ||
         self_update::state() == self_update::State::Installed)
@@ -957,6 +966,18 @@ body.mirrored #update-download:hover {
 update-message {
     color: var(--color-white);
 }
+/* A failed check shows a Retry button next to the message. */
+update-status[state=failed] {
+    display: flex;
+}
+update-status[state=failed] #update-download {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+}
+update-status[state=failed] #update-download icon {
+    decorator: text("&#xe5d5;" center center);
+}
 )RCSS");
         if (registered) {
             apply_scoped_styles(*this);
@@ -1330,6 +1351,9 @@ void Prelaunch::update() {
         } else {
             mUpdateStatus->SetAttribute("state", "failed");
             set_text_content(mUpdateMessage, i18n::tr_str("prelaunch.update.failed"));
+            if (mUpdateDownloadLabel != nullptr) {
+                set_text_content(mUpdateDownloadLabel, i18n::tr_str("prelaunch.update.retry"));
+            }
         }
     }
 
@@ -1409,8 +1433,11 @@ bool Prelaunch::handle_nav_command(Rml::Event& event, NavCommand cmd) {
     }
     // Fork: the update button ("Install X") is reachable with the D-pad, after
     // the last menu entry, whenever it is shown.
-    const bool updateShown = mUpdateDownload != nullptr && mUpdateStatus != nullptr &&
-                             mUpdateStatus->GetAttribute<Rml::String>("state", "") == "available";
+    const auto updateState = mUpdateStatus != nullptr
+                                 ? mUpdateStatus->GetAttribute<Rml::String>("state", "")
+                                 : Rml::String{};
+    const bool updateShown =
+        mUpdateDownload != nullptr && (updateState == "available" || updateState == "failed");
     const auto menuCount = static_cast<int>(mMenuButtons.size());
     if (updateShown) {
         for (auto* e = target; e != nullptr; e = e->GetParentNode()) {
