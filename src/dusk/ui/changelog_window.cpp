@@ -39,11 +39,11 @@ changelog-version {
     display: block;
     font-size: var(--font-size-2xl);
     font-weight: bold;
-    color: var(--color-ready);
+    color: var(--color-accent);
 }
 changelog-version beta {
     font-size: var(--font-size-sm);
-    color: var(--color-danger-heading);
+    color: var(--color-warning);
     padding-left: 8dp;
 }
 changelog-version base {
