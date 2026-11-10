@@ -1,6 +1,7 @@
 #include "ui.hpp"
 
 #include "command_console.hpp"
+#include "drag_scroll.hpp"
 #include "drop_install_modal.hpp"
 #include "i18n.hpp"
 #include "icon_provider.hpp"
@@ -9,6 +10,7 @@
 #include "prelaunch.hpp"
 #include "remote_texture_provider.hpp"
 #include "saves_window.hpp"
+#include "touch_feedback.hpp"
 #include "window.hpp"
 
 #include "dusk/config.hpp"
@@ -116,6 +118,9 @@ bool initialize() noexcept {
     load_font("NotoMono-Regular.ttf");
 
     i18n::initialize();
+    if (auto* context = aurora::rmlui::get_context()) {
+        install_drag_scroll(*context);  // fork: touch/mouse drag scrolls lists
+    }
 
     register_icon_texture_provider();
     register_mod_texture_provider();
@@ -129,6 +134,7 @@ bool initialize() noexcept {
 }
 
 void shutdown() noexcept {
+    touch_feedback::shutdown();
     i18n::shutdown();
     mods::updates::shutdown();
     mods::queue::shutdown();
@@ -314,6 +320,7 @@ void handle_event(const SDL_Event& event) noexcept {
             return;
         }
     }
+    touch_feedback::handle_event(event);  // fork: touch mark
     input::handle_event(event);
 }
 
@@ -481,6 +488,7 @@ void update() noexcept {
     }
 
     update_remote_texture_provider();
+    touch_feedback::update();
     for (size_t index = 0; index < sPendingDrops.size();) {
         auto& pending = sPendingDrops[index];
         if (!pending.inspection.ready()) {

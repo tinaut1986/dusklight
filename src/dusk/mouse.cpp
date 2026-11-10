@@ -6,6 +6,7 @@
 #include "dusk/ui/ui.hpp"
 
 #include <SDL3/SDL_mouse.h>
+#include <SDL3/SDL_touch.h>
 #include <SDL3/SDL_video.h>
 #include <aurora/lib/window.hpp>
 #include <imgui.h>
@@ -24,6 +25,9 @@ float s_aim_pitch_rad = 0.0f;
 float s_camera_yaw_rad = 0.0f;
 float s_camera_pitch_rad = 0.0f;
 Clock::time_point s_last_cursor_motion = Clock::now();
+// Fork: the last pointer input was a finger, so the arrow stays hidden (the UI
+// draws a touch mark instead). Real mouse motion or clicks bring it back.
+bool s_touch_mode = false;
 
 void reset_deltas() {
     s_aim_yaw_rad = s_aim_pitch_rad = 0.0f;
@@ -134,7 +138,7 @@ bool cursor_idle() {
 }
 
 bool should_show_cursor(bool captured) {
-    if (captured) {
+    if (captured || s_touch_mode) {
         return false;
     }
     if (ui::any_document_visible()) {
@@ -200,6 +204,22 @@ void handle_event(const SDL_Event& event) noexcept {
     switch (event.type) {
     case SDL_EVENT_MOUSE_MOTION:
         s_last_cursor_motion = Clock::now();
+        // SDL also turns touches into mouse events tagged SDL_TOUCH_MOUSEID.
+        if (event.motion.which != SDL_TOUCH_MOUSEID) {
+            s_touch_mode = false;
+        }
+        break;
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        if (event.button.which != SDL_TOUCH_MOUSEID) {
+            s_touch_mode = false;
+        }
+        break;
+    case SDL_EVENT_FINGER_DOWN:
+    case SDL_EVENT_FINGER_MOTION:
+        // Touchscreens only: laptop touchpads can also report fingers.
+        if (SDL_GetTouchDeviceType(event.tfinger.touchID) == SDL_TOUCH_DEVICE_DIRECT) {
+            s_touch_mode = true;
+        }
         break;
     case SDL_EVENT_WINDOW_FOCUS_LOST:
         on_focus_lost();

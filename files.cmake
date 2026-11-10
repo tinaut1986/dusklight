@@ -1608,6 +1608,10 @@ set(DUSK_FILES
         src/dusk/ui/input.hpp
         src/dusk/ui/changelog_window.cpp
         src/dusk/ui/changelog_window.hpp
+        src/dusk/ui/drag_scroll.cpp
+        src/dusk/ui/drag_scroll.hpp
+        src/dusk/ui/touch_feedback.cpp
+        src/dusk/ui/touch_feedback.hpp
         src/dusk/ui/i18n.cpp
         src/dusk/ui/i18n.hpp
         src/dusk/ui/logs_window.cpp

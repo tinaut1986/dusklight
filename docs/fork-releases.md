@@ -90,4 +90,9 @@ does.
 * Updates come from this fork, not TwilitRealm.
 * No Sentry crash reporting (not configured in this fork's builds).
 * Discord Rich Presence is off by default (Settings → Interface).
+* Touch: dragging scrolls lists (`src/dusk/ui/drag_scroll.cpp`), and real
+  touchscreen input hides the arrow and draws a ring (`touch_feedback.cpp`).
+  On the Steam Deck, Game Mode turns touches into mouse clicks unless the
+  game's controller layout adds **Touchscreen Native Support** (System tab, as
+  an always-on command); only then can the game tell a finger from the mouse.
 * The mod catalog and remote textures still use `twilitrealm.dev`.
