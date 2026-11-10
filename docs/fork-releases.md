@@ -18,8 +18,9 @@ The base version is detected from the nearest upstream tag (`vX.Y.Z`, no `+`) by
 `cmake/ForkVersion.cmake`. The release workflow refuses a tag whose `+base`
 part does not match it.
 
-Bump the fork version as you like (semver is a good guide): a new upstream base
-with no fork changes is usually a minor bump, fixes to fork code a patch bump.
+Bump the fork version as in the other ports: the patch number for each new
+release (features included, e.g. v1.1.0 -> v1.1.1), the minor or major number
+for bigger milestones. Only "higher than the installed one" matters to players.
 
 ## Branches and channels
 

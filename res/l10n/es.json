@@ -1044,7 +1044,9 @@
       "beta_updates_help": "Ofrece también versiones beta al buscar actualizaciones. Las betas reciben antes las novedades y los cambios del proyecto original, pero pueden tener fallos.",
       "changelog": "Lista de cambios",
       "changelog_help_stable": "Todas las versiones hasta la última estable, de la más nueva a la más antigua. Incluye las betas que llevaron a ella.",
-      "changelog_help_beta": "Todas las versiones hasta la más nueva, beta o estable, de la más nueva a la más antigua."
+      "changelog_help_beta": "Todas las versiones hasta la más nueva, beta o estable, de la más nueva a la más antigua.",
+      "check_now": "Buscar actualizaciones ahora",
+      "check_now_help": "Busca ahora una versión más nueva de tu canal, también durante la partida. Muestra qué ha cambiado y la instala; la nueva versión arranca la próxima vez que abras Dusklight."
     },
     "scaling_mode": {
       "gamecube": "GameCube",
@@ -1169,6 +1171,9 @@
     "no_notes": "Esta versión no tiene notas.",
     "close": "Cerrar",
     "beta": "BETA",
-    "base": "base {version}"
+    "base": "base {version}",
+    "install": "Instalar actualización",
+    "download": "Descargar actualización",
+    "available": "La versión {version} está disponible."
   }
 }

@@ -280,7 +280,7 @@ void on_update_button() {
         return;
     }
     if (has_whats_new()) {
-        open_changelog(ChangelogMode::WhatsNew, [] { open_update_release(); });
+        open_changelog(ChangelogMode::WhatsNew);
         return;
     }
     open_update_release();

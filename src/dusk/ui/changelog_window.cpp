@@ -5,6 +5,7 @@
 #include "modal.hpp"
 #include "ui.hpp"
 
+#include <SDL3/SDL_misc.h>
 #include <borealis/task.hpp>
 #include <fmt/format.h>
 
@@ -61,6 +62,12 @@ changelog-heading {
     display: block;
     padding-top: 6dp;
     font-weight: bold;
+}
+changelog-status {
+    display: block;
+    padding: 4dp 0dp 8dp 0dp;
+    font-weight: bold;
+    color: var(--color-accent);
 }
 changelog-empty {
     display: block;
@@ -156,12 +163,12 @@ std::string entries_rml(const std::vector<NotesEntry>& entries) {
 
 class ChangelogModal final : public Modal {
 public:
-    ChangelogModal(ChangelogMode mode, std::function<void()> onInstall)
+    explicit ChangelogModal(ChangelogMode mode)
         : Modal{Props{
-              .title = i18n::tr_str(mode == ChangelogMode::WhatsNew ? "changelog.title_whats_new"
-                                                                    : "changelog.title_history"),
+              .title = i18n::tr_str(mode == ChangelogMode::History ? "changelog.title_history"
+                                                                   : "changelog.title_whats_new"),
               .bodyRml = "",
-              .actions = make_actions(mode, onInstall),
+              .actions = make_actions(mode, this),
               .onDismiss = [](Modal& modal) {
                   mDoAud_seStartMenu(kSoundWindowClose);
                   modal.pop();
@@ -169,14 +176,19 @@ public:
               .variant = "changelog",
           }},
           mMode{mode} {
+        mStatus = content_pane().add_rml("");
         mBody = content_pane().add_rml("");
-        if (const auto* check = self_update::last_check()) {
-            show(*check);
+        const auto* cached = self_update::last_check();
+        if (cached != nullptr && mode != ChangelogMode::CheckNow) {
+            mCheck = *cached;
+            show();
         } else {
-            set_message(i18n::tr_str("changelog.loading"));
+            set_message(i18n::tr_str(
+                mode == ChangelogMode::CheckNow ? "prelaunch.update.checking" : "changelog.loading"));
             mTask = self_update::check_for_update(
                 self_update::follows_betas(), i18n::current_language());
         }
+        refresh_status();
     }
 
     void update() override {
@@ -189,11 +201,13 @@ public:
             mTask = {};
             if (result && result->result.status != borealis::update::Status::Failed) {
                 self_update::set_last_check(*result);
-                show(*result);
+                mCheck = std::move(result);
+                show();
             } else {
                 set_message(i18n::tr_str("changelog.failed"));
             }
         }
+        refresh_status();
         Modal::update();
     }
 
@@ -225,8 +239,7 @@ protected:
     }
 
 private:
-    static std::vector<ModalAction> make_actions(
-        ChangelogMode mode, const std::function<void()>& onInstall) {
+    static std::vector<ModalAction> make_actions(ChangelogMode mode, ChangelogModal* self) {
         std::vector<ModalAction> actions{ModalAction{
             .label = i18n::tr_str("changelog.close"),
             .onPressed = [](Modal& modal) {
@@ -234,56 +247,119 @@ private:
                 modal.pop();
             },
         }};
-        const auto* check = self_update::last_check();
-        if (mode == ChangelogMode::WhatsNew && onInstall && check != nullptr &&
-            check->result.status == borealis::update::Status::UpdateAvailable)
-        {
-            const auto& latest = check->result.latest;
-            std::string version = latest.tagName.substr(0, latest.tagName.find('+'));
-            if (!version.empty() && version.front() == 'v') {
-                version.erase(0, 1);
-            }
-            const bool canInstall =
-                self_update::supported() && self_update::find_asset(latest) != nullptr;
+        if (mode != ChangelogMode::History) {
             actions.push_back(ModalAction{
-                .label = fmt::format(fmt::runtime(i18n::tr_source(canInstall ? "prelaunch.update.install"
-                                                                             : "prelaunch.update.download")),
-                    fmt::arg("version", version)),
-                .onPressed = [onInstall](Modal& modal) {
-                    // Copy first: popping may destroy this action and its captures.
-                    const auto install = onInstall;
-                    modal.pop();
-                    install();
-                },
+                .label = i18n::tr_str(
+                    self_update::supported() ? "changelog.install" : "changelog.download"),
+                .onPressed = [self](Modal&) { self->install(); },
+                .isDisabled = [self] { return !self->can_install(); },
             });
         }
         return actions;
+    }
+
+    bool update_available() const {
+        return mCheck && mCheck->result.status == borealis::update::Status::UpdateAvailable;
+    }
+
+    bool can_install() const {
+        const auto state = self_update::state();
+        return update_available() && state != self_update::State::Downloading &&
+               state != self_update::State::Verifying && state != self_update::State::Installed;
+    }
+
+    // Install in place from an AppImage; otherwise open the release page. The
+    // window stays open and shows the progress, in game or on the start screen.
+    void install() {
+        if (!can_install()) {
+            return;
+        }
+        mDoAud_seStartMenu(kSoundClick);
+        const auto& latest = mCheck->result.latest;
+        if (self_update::start(latest)) {
+            return;
+        }
+        if (!latest.htmlUrl.empty()) {
+            SDL_OpenURL(latest.htmlUrl.c_str());
+        }
+    }
+
+    std::string target_version() const {
+        if (!mCheck) {
+            return {};
+        }
+        std::string version = mCheck->result.latest.tagName;
+        version = version.substr(0, version.find('+'));
+        if (!version.empty() && version.front() == 'v') {
+            version.erase(0, 1);
+        }
+        return version;
+    }
+
+    void refresh_status() {
+        std::string text;
+        if (mMode != ChangelogMode::History) {
+            switch (self_update::state()) {
+            case self_update::State::Downloading: {
+                const auto done = self_update::progress_completed();
+                const auto total = self_update::progress_total();
+                const int percent = total && *total > 0 ? static_cast<int>(done * 100 / *total) : 0;
+                text = fmt::format(fmt::runtime(i18n::tr_source("prelaunch.update.downloading")),
+                    fmt::arg("percent", percent));
+                break;
+            }
+            case self_update::State::Verifying:
+                text = i18n::tr_str("prelaunch.update.verifying");
+                break;
+            case self_update::State::Installed:
+                text = fmt::format(fmt::runtime(i18n::tr_source("prelaunch.update.installed")),
+                    fmt::arg("version", target_version()));
+                break;
+            case self_update::State::Failed:
+                text = i18n::tr_str("prelaunch.update.install_failed");
+                break;
+            case self_update::State::Idle:
+                if (update_available()) {
+                    text = fmt::format(fmt::runtime(i18n::tr_source("changelog.available")),
+                        fmt::arg("version", target_version()));
+                }
+                break;
+            }
+        }
+        if (text != mStatusText) {
+            mStatusText = text;
+            mStatus->SetInnerRML(
+                text.empty() ? "" : "<changelog-status>" + escape(text) + "</changelog-status>");
+        }
     }
 
     void set_message(const std::string& text) {
         mBody->SetInnerRML("<changelog-empty>" + escape(text) + "</changelog-empty>");
     }
 
-    void show(const self_update::UpdateCheck& check) {
-        const auto& entries = mMode == ChangelogMode::WhatsNew ? check.whatsNew : check.history;
+    void show() {
+        const auto& entries = mMode == ChangelogMode::History ? mCheck->history : mCheck->whatsNew;
         if (entries.empty()) {
-            set_message(i18n::tr_str(mMode == ChangelogMode::WhatsNew ? "changelog.up_to_date"
-                                                                      : "changelog.empty"));
+            set_message(i18n::tr_str(
+                mMode == ChangelogMode::History ? "changelog.empty" : "changelog.up_to_date"));
             return;
         }
         mBody->SetInnerRML(entries_rml(entries));
     }
 
     ChangelogMode mMode;
+    Rml::Element* mStatus = nullptr;
     Rml::Element* mBody = nullptr;
+    std::string mStatusText;
+    std::optional<self_update::UpdateCheck> mCheck;
     borealis::Task<self_update::UpdateCheck> mTask;
 };
 
 }  // namespace
 
-void open_changelog(ChangelogMode mode, std::function<void()> onInstall) {
+void open_changelog(ChangelogMode mode) {
     ensure_styles();
-    auto& doc = push_document(std::make_unique<ChangelogModal>(mode, std::move(onInstall)));
+    auto& doc = push_document(std::make_unique<ChangelogModal>(mode));
     apply_scoped_styles(doc);
     doc.focus();
 }

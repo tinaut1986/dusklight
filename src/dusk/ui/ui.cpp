@@ -14,6 +14,7 @@
 #include "window.hpp"
 
 #include "dusk/config.hpp"
+#include "dusk/self_update.hpp"
 #include "dusk/mods/queue.hpp"
 #include "dusk/mods/updates.hpp"
 
@@ -489,6 +490,7 @@ void update() noexcept {
 
     update_remote_texture_provider();
     touch_feedback::update();
+    self_update::poll();  // fork: in-place update, also while playing
     for (size_t index = 0; index < sPendingDrops.size();) {
         auto& pending = sPendingDrops[index];
         if (!pending.inspection.ready()) {

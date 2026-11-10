@@ -1632,6 +1632,14 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
                 .helpText = tr_str("settings.interface.beta_updates_help"),
             });
         leftPane.register_control(
+            leftPane.add_button(tr_str("settings.interface.check_now")).on_pressed([] {
+                mDoAud_seStartMenu(kSoundClick);
+                open_changelog(ChangelogMode::CheckNow);
+            }),
+            rightPane, [](Pane& pane) {
+                pane.add_text(tr_str("settings.interface.check_now_help"));
+            });
+        leftPane.register_control(
             leftPane.add_button(tr_str("settings.interface.changelog")).on_pressed([] {
                 mDoAud_seStartMenu(kSoundClick);
                 open_changelog(ChangelogMode::History);
