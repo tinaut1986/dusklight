@@ -350,6 +350,8 @@ struct UserSettings {
         ConfigVar<bool> showPipelineCompilation;
         ConfigVar<bool> wasPresetChosen;
         ConfigVar<bool> checkForUpdates;
+        // Fork: also offer prerelease (beta) builds when checking for updates.
+        ConfigVar<bool> betaUpdates;
         ConfigVar<bool> checkForModUpdates;
         ConfigVar<int> cardFileType;
         ConfigVar<bool> enableAdvancedSettings;

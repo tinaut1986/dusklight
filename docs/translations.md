@@ -48,15 +48,8 @@ It warns about obsolete keys and keys no code references.
 ## Keeping the fork up to date
 
 Upstream (`TwilitRealm/dusklight`) adds new options with hardcoded English text.
-After each sync:
-
-```sh
-git fetch upstream
-git switch main && git merge --ff-only upstream/main && git push origin main
-git switch i18n && git merge main
-```
-
-Then:
+Upstream is merged into the `release` branch (see [fork-releases.md](fork-releases.md)).
+After each merge:
 
 1. Resolve conflicts, usually new options in `src/dusk/ui/settings.cpp`: keep the
    `tr_str(...)` calls and add the new options with new keys.

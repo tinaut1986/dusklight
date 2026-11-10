@@ -8,6 +8,7 @@
 #include "dusk/language.hpp"
 #include "dusk/main.h"
 #include "dusk/mod_loader.hpp"
+#include "dusk/self_update.hpp"
 #include "dusk/settings.h"
 #include "dusk/ui/format.hpp"
 #include "dusk/ui/menu_bar.hpp"
@@ -205,7 +206,14 @@ void begin_update_check() {
     if (sUpdateCheck || sUpdateCheckResult.has_value()) {
         return;
     }
-    sUpdateCheck = borealis::update::check_latest_github_release(AppInfo);
+#if defined(DUSK_BETA_BUILD) && DUSK_BETA_BUILD
+    constexpr bool kBetaBuild = true;
+#else
+    constexpr bool kBetaBuild = false;
+#endif
+    // Beta builds always follow betas; stable builds only if the user opts in.
+    sUpdateCheck = borealis::update::check_latest_github_release(AppInfo,
+        {.includePrereleases = kBetaBuild || getSettings().backend.betaUpdates.getValue()});
 }
 
 std::optional<borealis::update::Result> take_finished_update_check() {
@@ -223,13 +231,24 @@ std::string update_release_label(const borealis::update::Release& release) {
     if (!tagName.empty() && tagName.front() == 'v') {
         tagName.remove_prefix(1);
     }
-    return std::string(tagName);
+    // Fork tags carry the upstream base as build metadata (1.0.0+base.2.0.3).
+    return std::string(tagName.substr(0, tagName.find('+')));
 }
 
 void open_update_release() {
     if (!sUpdateCheckResult.has_value() ||
         sUpdateCheckResult->status != borealis::update::Status::UpdateAvailable)
     {
+        return;
+    }
+
+    // Fork: running from an AppImage, install in place instead of opening a browser
+    // (which is awkward in Steam Deck Game Mode).
+    if (self_update::state() == self_update::State::Installed) {
+        return;
+    }
+    if (self_update::start(sUpdateCheckResult->latest)) {
+        mDoAud_seStartMenu(kSoundClick);
         return;
     }
 
@@ -1131,11 +1150,23 @@ void Prelaunch::update() {
         }
     }
     if (mVersion != nullptr) {
+        // Fork builds carry two numbers: our release (v1.0.0+base.2.0.3) and the
+        // upstream version it is built on. Show "1.0.0 · base 2.0.3".
         std::string_view versionStr(BOREALIS_APP_DESCRIBE);
-        if (versionStr[0] == 'v') {
+        if (!versionStr.empty() && versionStr[0] == 'v') {
             versionStr = versionStr.substr(1);
         }
-        set_text_content(mVersion, Rml::String{versionStr});
+        versionStr = versionStr.substr(0, versionStr.find('+'));
+        std::string_view baseStr(DUSK_BASE_VERSION);
+        if (!baseStr.empty() && baseStr[0] == 'v') {
+            baseStr = baseStr.substr(1);
+        }
+        Rml::String text{versionStr};
+        if (!baseStr.empty() && baseStr != "unknown") {
+            text += fmt::format(fmt::runtime(i18n::tr_source("prelaunch.base_version")),
+                fmt::arg("version", baseStr));
+        }
+        set_text_content(mVersion, text);
     }
     if (mUpdateStatus != nullptr && mUpdateMessage != nullptr) {
         if (auto result = take_finished_update_check()) {
@@ -1154,12 +1185,50 @@ void Prelaunch::update() {
             mUpdateStatus->RemoveAttribute("state");
             set_text_content(mUpdateMessage, "");
         } else if (sUpdateCheckResult->status == borealis::update::Status::UpdateAvailable) {
-            mUpdateStatus->SetAttribute("state", "available");
-            set_text_content(mUpdateMessage, i18n::tr_str("prelaunch.update.available"));
-            if (mUpdateDownloadLabel != nullptr) {
-                set_text_content(mUpdateDownloadLabel,
-                    fmt::format(fmt::runtime(i18n::tr_source("prelaunch.update.download")),
-                        fmt::arg("version", update_release_label(sUpdateCheckResult->latest))));
+            self_update::poll();
+            const auto& latest = sUpdateCheckResult->latest;
+            const auto version = update_release_label(latest);
+            switch (self_update::state()) {
+            case self_update::State::Downloading: {
+                // "checking" shows the message without the button.
+                mUpdateStatus->SetAttribute("state", "checking");
+                const auto done = self_update::progress_completed();
+                const auto total = self_update::progress_total();
+                const int percent =
+                    total && *total > 0 ? static_cast<int>(done * 100 / *total) : 0;
+                set_text_content(mUpdateMessage,
+                    fmt::format(fmt::runtime(i18n::tr_source("prelaunch.update.downloading")),
+                        fmt::arg("percent", percent)));
+                break;
+            }
+            case self_update::State::Verifying:
+                mUpdateStatus->SetAttribute("state", "checking");
+                set_text_content(mUpdateMessage, i18n::tr_str("prelaunch.update.verifying"));
+                break;
+            case self_update::State::Installed:
+                mUpdateStatus->SetAttribute("state", "checking");
+                set_text_content(mUpdateMessage,
+                    fmt::format(fmt::runtime(i18n::tr_source("prelaunch.update.installed")),
+                        fmt::arg("version", version)));
+                break;
+            case self_update::State::Failed:
+            case self_update::State::Idle: {
+                const bool failed = self_update::state() == self_update::State::Failed;
+                const bool canInstall =
+                    self_update::supported() && self_update::find_asset(latest) != nullptr;
+                mUpdateStatus->SetAttribute("state", "available");
+                set_text_content(mUpdateMessage,
+                    i18n::tr_str(failed ? "prelaunch.update.install_failed"
+                                        : "prelaunch.update.available"));
+                if (mUpdateDownloadLabel != nullptr) {
+                    set_text_content(mUpdateDownloadLabel,
+                        fmt::format(fmt::runtime(i18n::tr_source(canInstall
+                                                                    ? "prelaunch.update.install"
+                                                                    : "prelaunch.update.download")),
+                            fmt::arg("version", version)));
+                }
+                break;
+            }
             }
         } else {
             mUpdateStatus->SetAttribute("state", "failed");

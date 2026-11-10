@@ -57,7 +57,12 @@
       "checking": "Buscando actualizaciones...",
       "available": "¡Actualización disponible!",
       "download": "Descargar {version}",
-      "failed": "Error al buscar actualizaciones"
+      "failed": "Error al buscar actualizaciones",
+      "install": "Instalar {version}",
+      "downloading": "Descargando actualización... {percent}%",
+      "verifying": "Verificando actualización...",
+      "installed": "Versión {version} instalada. Reinicia Dusklight para usarla.",
+      "install_failed": "No se pudo instalar la actualización"
     },
     "verify_modal": {
       "title": "Advertencia de verificación del disco",
@@ -83,7 +88,8 @@
       "success": "La imagen del disco seleccionada es válida."
     },
     "filter_disc_images": "Imágenes de disco del juego",
-    "filter_all_files": "Todos los archivos"
+    "filter_all_files": "Todos los archivos",
+    "base_version": " · base {version}"
   },
   "controller": {
     "port": "Puerto {number}",
@@ -1033,7 +1039,9 @@
       "skip_tv_settings": "Omitir pantalla de ajustes de TV",
       "skip_tv_settings_help": "Omite la pantalla de calibración de TV que se muestra al cargar una partida.",
       "recording_mode": "Modo grabación",
-      "recording_mode_help": "Desactiva el HUD del juego y toda la música de fondo.<br/><br/>Útil para grabar videos."
+      "recording_mode_help": "Desactiva el HUD del juego y toda la música de fondo.<br/><br/>Útil para grabar videos.",
+      "beta_updates": "Actualizaciones beta",
+      "beta_updates_help": "Ofrece también versiones beta al buscar actualizaciones. Las betas reciben antes las novedades y los cambios del proyecto original, pero pueden tener fallos."
     },
     "scaling_mode": {
       "gamecube": "GameCube",

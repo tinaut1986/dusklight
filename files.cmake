@@ -1560,6 +1560,8 @@ set(DUSK_FILES
         src/dusk/scope_guard.hpp
         src/dusk/save_manager.cpp
         src/dusk/save_manager.hpp
+        src/dusk/self_update.cpp
+        src/dusk/self_update.hpp
         src/dusk/settings.cpp
         src/dusk/speedrun.cpp
         src/dusk/stubs.cpp

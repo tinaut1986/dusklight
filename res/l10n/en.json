@@ -57,7 +57,12 @@
       "checking": "Checking for updates...",
       "available": "Update available!",
       "download": "Download {version}",
-      "failed": "Failed to check for updates"
+      "failed": "Failed to check for updates",
+      "install": "Install {version}",
+      "downloading": "Downloading update... {percent}%",
+      "verifying": "Verifying update...",
+      "installed": "Version {version} installed. Restart Dusklight to use it.",
+      "install_failed": "Could not install the update"
     },
     "verify_modal": {
       "title": "Disc verification warning",
@@ -83,7 +88,8 @@
       "success": "The selected disc image is valid."
     },
     "filter_disc_images": "Game Disc Images",
-    "filter_all_files": "All Files"
+    "filter_all_files": "All Files",
+    "base_version": " · base {version}"
   },
   "controller": {
     "port": "Port {number}",
@@ -1033,7 +1039,9 @@
       "skip_tv_settings": "Skip TV Settings Screen",
       "skip_tv_settings_help": "Skips the TV calibration screen shown when loading a save.",
       "recording_mode": "Recording Mode",
-      "recording_mode_help": "Disables the game HUD and all background music.<br/><br/>Useful for recording footage."
+      "recording_mode_help": "Disables the game HUD and all background music.<br/><br/>Useful for recording footage.",
+      "beta_updates": "Beta Updates",
+      "beta_updates_help": "Also offer beta builds when checking for updates. Betas get new features and upstream changes first, but may have bugs."
     },
     "scaling_mode": {
       "gamecube": "GameCube",

@@ -7,7 +7,8 @@ namespace dusk {
     inline constexpr borealis::AppInfo AppInfo{
         .orgName = "TwilitRealm",
         .appName = "Dusklight",
-        .githubOwner = "TwilitRealm",
+        // Fork: updates come from this fork's releases, not upstream's.
+        .githubOwner = "tinaut1986",
         .githubRepo = "dusklight",
         .discordApplicationId = "1495632471994405035",
     };

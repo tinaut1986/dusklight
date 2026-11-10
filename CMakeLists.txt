@@ -7,6 +7,7 @@ endif ()
 
 include(extern/borealis/cmake/DetectVersion.cmake)
 borealis_detect_version()
+include(cmake/ForkVersion.cmake)
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 project(dusklight LANGUAGES C CXX VERSION ${BOREALIS_APP_VERSION})
 
@@ -312,7 +313,9 @@ if (DUSK_ENABLE_CODE_MODS)
 endif ()
 list(APPEND GAME_COMPILE_DEFS
         DUSK_HAS_FUNCHOOK=$<BOOL:${DUSK_HAS_FUNCHOOK}>
-        DUSK_HAS_PREPATCH=$<BOOL:${DUSK_HAS_PREPATCH}>)
+        DUSK_HAS_PREPATCH=$<BOOL:${DUSK_HAS_PREPATCH}>
+        DUSK_BASE_VERSION="${DUSK_BASE_VERSION}"
+        DUSK_BETA_BUILD=$<BOOL:${DUSK_BETA_BUILD}>)
 
 if (DUSK_PACKAGE_INSTALL)
     include(GNUInstallDirs)

@@ -1624,6 +1624,11 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
                 .key = tr_str("settings.interface.check_updates"),
                 .helpText = tr_str("settings.interface.check_updates_help"),
             });
+        config_bool_select(leftPane, rightPane, getSettings().backend.betaUpdates,
+            {
+                .key = tr_str("settings.interface.beta_updates"),
+                .helpText = tr_str("settings.interface.beta_updates_help"),
+            });
 #if BOREALIS_HAS_DISCORD
         config_bool_select(leftPane, rightPane, getSettings().game.enableDiscordPresence,
             {
