@@ -44,18 +44,20 @@ git tag v1.1.0+base.2.0.3
 git push origin release v1.1.0+base.2.0.3
 ```
 
-Stable (push `main` before the tag, or the build cannot see the merge and ships a
-beta):
+Stable with a new number (push `main` before the tag, or the build cannot see the
+merge and ships a beta). Use `--no-ff` so the tag lands on its own merge commit:
+two tags on one commit make the version baked into the binary ambiguous.
 
 ```sh
-git switch main && git merge --ff-only release && git push origin main
-git tag v1.1.0+base.2.0.3      # skip if the beta tag is already on this commit
+git switch main && git merge --no-ff release -m "Release v1.1.0" && git push origin main
+git tag v1.1.0+base.2.0.3
 git push origin v1.1.0+base.2.0.3
 ```
 
-To promote an existing beta tag after merging it into `main`, re-run the
-"Build Release" workflow on that tag (Actions → Build Release → Run workflow →
-pick the tag). The same release page becomes stable and latest.
+Promoting an existing beta as-is (same number): merge it into `main` and push,
+then re-run the "Build Release" workflow on the beta tag (Actions → Build
+Release → Run workflow → pick the tag). The same release page becomes stable
+and latest. Do not add a second tag to that commit.
 
 The workflow (`.github/workflows/release.yml`) builds the Linux x86_64 AppImage,
 checks translations, and attaches the AppImage plus its `.sha256` file.
