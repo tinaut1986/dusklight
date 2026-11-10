@@ -976,6 +976,40 @@ update-message {
         });
     }
 
+    // Fork: the pointer (also a touch in Steam's Game Mode, which arrives as a
+    // mouse) moves the focus with it. Before, hovering an entry lit it while the
+    // focused one (Play at start) stayed lit too, until the D-pad moved focus.
+    // Focus(false): no keyboard focus ring, just the hover look; the D-pad then
+    // carries on from the hovered entry.
+    const auto focusUnderPointer = [this](Rml::Event& event) {
+        auto* target = event.GetTargetElement();
+        for (const auto& button : mMenuButtons) {
+            auto* root = button->root();
+            if (button->contains(target)) {
+                if (root->GetContext() != nullptr && root->GetContext()->GetFocusElement() != root) {
+                    root->Focus(false);
+                }
+                return;
+            }
+        }
+        if (mUpdateDownload != nullptr) {
+            for (auto* e = target; e != nullptr; e = e->GetParentNode()) {
+                if (e == mUpdateDownload) {
+                    if (mUpdateDownload->GetContext()->GetFocusElement() != mUpdateDownload) {
+                        mUpdateDownload->Focus(false);
+                    }
+                    return;
+                }
+            }
+        }
+    };
+    if (auto* menuList = mDocument->GetElementById("menu-list")) {
+        listen(menuList, Rml::EventId::Mouseover, focusUnderPointer);
+    }
+    if (mUpdateDownload != nullptr) {
+        listen(mUpdateDownload, Rml::EventId::Mouseover, focusUnderPointer);
+    }
+
     try_apply_mirrored_layout(mDocument);
     refresh_static_texts(mDocument);
 
