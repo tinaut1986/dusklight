@@ -1,4 +1,7 @@
 {
+  "_meta": {
+    "name": "English"
+  },
   "menu": {
     "settings": "Settings",
     "warp": "Warp",
@@ -78,7 +81,9 @@
       "canceled": "Disc verification was canceled. Dusklight cannot guarantee the selected disc image is compatible.",
       "hash_mismatch": "The selected disc image did not pass hash verification. It may be corrupt or modified.",
       "success": "The selected disc image is valid."
-    }
+    },
+    "filter_disc_images": "Game Disc Images",
+    "filter_all_files": "All Files"
   },
   "controller": {
     "port": "Port {number}",
@@ -125,7 +130,23 @@
     "press_button": "Press a Key or Button...",
     "press_key": "Press a Key or Mouse Button...",
     "press_axis": "Move Axis or press a Key or Button...",
-    "waiting": "Waiting..."
+    "waiting": "Waiting...",
+    "device_number": "Device {number}",
+    "left_stick": "Left Stick",
+    "right_stick": "Right Stick",
+    "mouse_left": "Mouse Left",
+    "mouse_middle": "Mouse Middle",
+    "mouse_right": "Mouse Right",
+    "mouse_x1": "Mouse X1",
+    "mouse_x2": "Mouse X2",
+    "button_cross": "Cross",
+    "button_circle": "Circle",
+    "button_triangle": "Triangle",
+    "button_square": "Square",
+    "dpad_left": "D-pad left",
+    "dpad_right": "D-pad right",
+    "dpad_up": "D-pad up",
+    "dpad_down": "D-pad down"
   },
   "editor": {
     "title": "Editor",
@@ -341,7 +362,9 @@
     "backup_retention": "The {count} most recent backups are preserved.",
     "view_backups": "View Backups",
     "export_full_card": "Export Full Card Image (.raw)",
-    "danger_zone": "Danger Zone"
+    "danger_zone": "Danger Zone",
+    "filter_save_file": "Save file",
+    "filter_save_files": "Save files"
   },
   "touch_controls_editor": {
     "reset_title": "Reset Touch Layout?",
@@ -367,7 +390,8 @@
     "livesplit_disconnected": "LiveSplit disconnected",
     "compiling": "Compiling {count} {noun}",
     "noun_shader": "shader",
-    "noun_shaders": "shaders"
+    "noun_shaders": "shaders",
+    "enabled_mods": "Enabled Mods:\n{mods}"
   },
   "achievements": {
     "category_challenge": "Challenge",
@@ -543,7 +567,8 @@
       "cannot_compare": "{name}: version '{version}' cannot be compared.",
       "available_badge": "{label} · {count} mod updates available",
       "auto_check": "Check for updates"
-    }
+    },
+    "logs": "Logs"
   },
   "browser": {
     "sort_featured": "Featured",
@@ -635,7 +660,10 @@
     "enabled_state": "enabled",
     "disabled_state": "disabled",
     "kept_on_disk": "{size} kept on disk",
-    "ahead_view": "{count} ahead · view downloads"
+    "ahead_view": "{count} ahead · view downloads",
+    "downloading": "Downloading",
+    "paused": "Paused",
+    "canceled": "Canceled"
   },
   "drop_install": {
     "duplicate": "Duplicate package in this drop",
@@ -1014,8 +1042,6 @@
     },
     "menu_language": {
       "auto": "Auto",
-      "english": "English",
-      "spanish": "Español",
       "help": "Language used by the Dusklight configuration menus.<br/><br/>Auto follows your system language when a translation is available."
     },
     "tools": {
@@ -1116,5 +1142,10 @@
     "no_items": "No items",
     "return": "← Return",
     "reset_to_default": "Reset to default"
+  },
+  "graphics": {
+    "auto_resolution": "Auto ({width}×{height})",
+    "resampler_bilinear": "Bilinear",
+    "resampler_area": "Area"
   }
 }

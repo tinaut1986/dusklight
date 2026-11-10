@@ -1,44 +1,64 @@
 #pragma once
 
-#include "dusk/settings.h"
-
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace dusk::ui::i18n {
 
-using dusk::MenuLanguage;
-
 /*
- * Loads res/l10n/<lang>.json for the configured menu language, falling back to
- * res/l10n/en.json for any missing keys. Call once during UI startup.
+ * Menu (Dusklight UI) localization. Not related to the game's own language.
+ *
+ * Every res/l10n/<code>.json file is a language. Each file may carry a "_meta"
+ * object with a display name, e.g. {"_meta": {"name": "Español"}}. en.json is the
+ * source table and the fallback for any key a translation does not provide.
+ *
+ * The configured language is stored as a code ("es", "pt-BR", ...) or "auto",
+ * which picks the best match for the system locale.
  */
+
+constexpr std::string_view kAutoLanguage = "auto";
+constexpr std::string_view kSourceLanguage = "en";
+
+struct LanguageInfo {
+    std::string code;  // file name without extension, e.g. "es" or "pt-BR"
+    std::string name;  // native display name from _meta.name, or the code
+};
+
+/* Discover languages and load the configured one. Call once during UI startup. */
 void initialize() noexcept;
 void shutdown() noexcept;
 
 /*
- * Translate a string by its dot path (e.g. "menu.reset"). The English table stores
- * the source strings, so English keys double as source text.
+ * Translate a string by its dot path (e.g. "menu.reset").
  * Fallback order: current language -> English -> the key itself.
+ *
+ * Translations whose {placeholders} do not match the English string are rejected
+ * at load time, so the result is always safe to pass to fmt::runtime().
  */
 std::string_view tr(std::string_view key) noexcept;
 
-/*
- * Convenience wrapper returning a std::string for direct use with Rml::String APIs.
- */
+/* Convenience wrapper returning a std::string for direct use with Rml::String APIs. */
 inline std::string tr_str(std::string_view key) noexcept {
     return std::string{tr(key)};
 }
 
 /*
- * Raw source string for composite texts (e.g. "Press {key} to reset the game.").
- * Always comes from the English table so placeholders are formatted against the source.
+ * Format string for composite texts (e.g. "Press {key} to reset the game.").
+ * Same as tr(); kept as a separate name so call sites document that the result is
+ * passed to fmt. Placeholders are validated against English when loading.
  */
-std::string_view tr_source(std::string_view key) noexcept;
+inline std::string_view tr_source(std::string_view key) noexcept {
+    return tr(key);
+}
 
-/* Language currently in effect after Auto resolution. */
-MenuLanguage current_language() noexcept;
-/* Whether the current translation table comes from a non-English language. */
+/* Languages found in res/l10n, English first, then sorted by display name. */
+const std::vector<LanguageInfo>& available_languages() noexcept;
+
+/* Code of the language currently in effect after "auto" resolution. */
+const std::string& current_language() noexcept;
+
+/* Whether the current table comes from a language other than English. */
 bool is_translated() noexcept;
 
 /*

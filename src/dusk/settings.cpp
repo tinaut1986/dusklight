@@ -176,7 +176,7 @@ UserSettings g_userSettings = {
     },
 
     .ui = {
-        .menuLanguage {"ui.menuLanguage", MenuLanguage::Auto},
+        .menuLanguage {"ui.language", "auto"},
     },
 
     .backend = {

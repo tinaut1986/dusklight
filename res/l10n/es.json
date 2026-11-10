@@ -1,4 +1,7 @@
 {
+  "_meta": {
+    "name": "Español"
+  },
   "menu": {
     "settings": "Ajustes",
     "warp": "Teletransporte",
@@ -78,7 +81,9 @@
       "canceled": "La verificación del disco se canceló. Dusklight no puede garantizar que la imagen del disco seleccionada sea compatible.",
       "hash_mismatch": "La imagen del disco seleccionada no pasó la verificación de hash. Puede estar dañada o modificada.",
       "success": "La imagen del disco seleccionada es válida."
-    }
+    },
+    "filter_disc_images": "Imágenes de disco del juego",
+    "filter_all_files": "Todos los archivos"
   },
   "controller": {
     "port": "Puerto {number}",
@@ -125,7 +130,23 @@
     "press_button": "Pulsa una tecla o botón...",
     "press_key": "Pulsa una tecla o botón del ratón...",
     "press_axis": "Mueve un eje o pulsa una tecla o botón...",
-    "waiting": "Esperando..."
+    "waiting": "Esperando...",
+    "device_number": "Dispositivo {number}",
+    "left_stick": "Stick izquierdo",
+    "right_stick": "Stick derecho",
+    "mouse_left": "Ratón (izquierdo)",
+    "mouse_middle": "Ratón (central)",
+    "mouse_right": "Ratón (derecho)",
+    "mouse_x1": "Ratón X1",
+    "mouse_x2": "Ratón X2",
+    "button_cross": "Cruz",
+    "button_circle": "Círculo",
+    "button_triangle": "Triángulo",
+    "button_square": "Cuadrado",
+    "dpad_left": "Cruceta izquierda",
+    "dpad_right": "Cruceta derecha",
+    "dpad_up": "Cruceta arriba",
+    "dpad_down": "Cruceta abajo"
   },
   "editor": {
     "title": "Editor",
@@ -341,7 +362,9 @@
     "backup_retention": "Se conservan las {count} copias de seguridad más recientes.",
     "view_backups": "Ver copias de seguridad",
     "export_full_card": "Exportar imagen completa de la tarjeta (.raw)",
-    "danger_zone": "Zona de peligro"
+    "danger_zone": "Zona de peligro",
+    "filter_save_file": "Archivo de guardado",
+    "filter_save_files": "Archivos de guardado"
   },
   "touch_controls_editor": {
     "reset_title": "¿Restablecer el diseño táctil?",
@@ -367,7 +390,8 @@
     "livesplit_disconnected": "LiveSplit desconectado",
     "compiling": "Compilando {count} {noun}",
     "noun_shader": "sombreador",
-    "noun_shaders": "sombreadores"
+    "noun_shaders": "sombreadores",
+    "enabled_mods": "Mods activados:\n{mods}"
   },
   "achievements": {
     "category_challenge": "Desafío",
@@ -543,7 +567,8 @@
       "cannot_compare": "{name}: la versión '{version}' no se puede comparar.",
       "available_badge": "{label} · {count} actualizaciones de mods disponibles",
       "auto_check": "Buscar actualizaciones"
-    }
+    },
+    "logs": "Registros"
   },
   "browser": {
     "sort_featured": "Destacados",
@@ -635,7 +660,10 @@
     "enabled_state": "activado",
     "disabled_state": "desactivado",
     "kept_on_disk": "{size} en el disco",
-    "ahead_view": "{count} en cola · ver descargas"
+    "ahead_view": "{count} en cola · ver descargas",
+    "downloading": "Descargando",
+    "paused": "En pausa",
+    "canceled": "Cancelado"
   },
   "drop_install": {
     "duplicate": "Paquete duplicado en esta entrega",
@@ -1014,8 +1042,6 @@
     },
     "menu_language": {
       "auto": "Automático",
-      "english": "English",
-      "spanish": "Español",
       "help": "Idioma usado por los menús de configuración de Dusklight.<br/><br/>Automático sigue el idioma de tu sistema cuando hay una traducción disponible."
     },
     "tools": {
@@ -1116,5 +1142,10 @@
     "no_items": "No hay elementos",
     "return": "← Volver",
     "reset_to_default": "Restaurar valores"
+  },
+  "graphics": {
+    "auto_resolution": "Automática ({width}×{height})",
+    "resampler_bilinear": "Bilineal",
+    "resampler_area": "Área"
   }
 }

@@ -479,16 +479,21 @@ void graphics_tuner_control(Window& window, Pane& leftPane, Pane& rightPane,
         });
 }
 
-Rml::String menu_language_label(MenuLanguage language) {
-    switch (language) {
-    case MenuLanguage::Auto:
+bool is_auto_language(std::string_view code) {
+    return code.empty() || code == i18n::kAutoLanguage;
+}
+
+// "Auto" is translated; every other language shows its own native name.
+Rml::String menu_language_label(std::string_view code) {
+    if (is_auto_language(code)) {
         return tr_str("settings.menu_language.auto");
-    case MenuLanguage::English:
-        return tr_str("settings.menu_language.english");
-    case MenuLanguage::Spanish:
-        return tr_str("settings.menu_language.spanish");
     }
-    return tr_str("settings.menu_language.auto");
+    for (const auto& language : i18n::available_languages()) {
+        if (language.code == code) {
+            return language.name;
+        }
+    }
+    return Rml::String{code};
 }
 
 void add_menu_language_control(Pane& leftPane, Pane& rightPane) {
@@ -507,20 +512,25 @@ void add_menu_language_control(Pane& leftPane, Pane& rightPane) {
         }),
         rightPane, [](Pane& pane) {
             pane.clear();
-            for (int i = 0; i <= static_cast<int>(MenuLanguage::Spanish); ++i) {
-                const auto language = static_cast<MenuLanguage>(i);
+            std::vector<std::string> codes{std::string{i18n::kAutoLanguage}};
+            for (const auto& language : i18n::available_languages()) {
+                codes.push_back(language.code);
+            }
+            for (const auto& code : codes) {
                 pane.add_button(
                         {
-                            .text = menu_language_label(language),
+                            .text = menu_language_label(code),
                             .isSelected =
-                                [language] {
-                                    return getSettings().ui.menuLanguage.getValue() == language;
+                                [code] {
+                                    const std::string current = getSettings().ui.menuLanguage.getValue();
+                                    return is_auto_language(code) ? is_auto_language(current)
+                                                                  : current == code;
                                 },
                         })
-                    .on_pressed([language] {
+                    .on_pressed([code] {
                         mDoAud_seStartMenu(kSoundItemChange);
-                        if (getSettings().ui.menuLanguage.getValue() != language) {
-                            getSettings().ui.menuLanguage.setValue(language);
+                        if (getSettings().ui.menuLanguage.getValue() != code) {
+                            getSettings().ui.menuLanguage.setValue(code);
                             config::save();
                             i18n::request_refresh();
                         }

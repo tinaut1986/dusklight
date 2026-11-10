@@ -33,13 +33,14 @@ Rml::String current_controller_name(int port) {
     if (name != nullptr) {
         return name;
     }
-    return keyboard_active(port) ? "Keyboard" : "None";
+    return i18n::tr_str(keyboard_active(port) ? "controller.keyboard" : "controller.none");
 }
 
 Rml::String controller_index_name(u32 index) {
     const char* name = PADGetNameForControllerIndex(index);
     if (name == nullptr) {
-        return fmt::format("Device {}", index + 1);
+        return fmt::format(fmt::runtime(i18n::tr_source("controller.device_number")),
+            fmt::arg("number", index + 1));
     }
     return name;
 }
@@ -54,6 +55,9 @@ SDL_Gamepad* gamepad_for_port(int port) {
 
 struct SpecificButtonName {
     SDL_GamepadType type;
+    // Either a label printed on the controller ("L3", "Options") or an l10n key
+    // ("controller.left_stick"); resolved through i18n::tr(), which returns
+    // non-key labels unchanged.
     const char* name;
 };
 
@@ -68,17 +72,17 @@ const std::vector<ButtonNames> kGamepadButtonNames = {
         {SDL_GAMEPAD_TYPE_PS3, "L3"},
         {SDL_GAMEPAD_TYPE_PS4, "L3"},
         {SDL_GAMEPAD_TYPE_PS5, "L3"},
-        {SDL_GAMEPAD_TYPE_XBOX360, "Left Stick"},
-        {SDL_GAMEPAD_TYPE_XBOXONE, "Left Stick"},
-        {SDL_GAMEPAD_TYPE_GAMECUBE, "Control Stick"},
+        {SDL_GAMEPAD_TYPE_XBOX360, "controller.left_stick"},
+        {SDL_GAMEPAD_TYPE_XBOXONE, "controller.left_stick"},
+        {SDL_GAMEPAD_TYPE_GAMECUBE, "controller.control_stick"},
     }},
     { SDL_GAMEPAD_BUTTON_RIGHT_STICK, {
         {SDL_GAMEPAD_TYPE_PS3, "R3"},
         {SDL_GAMEPAD_TYPE_PS4, "R3"},
         {SDL_GAMEPAD_TYPE_PS5, "R3"},
-        {SDL_GAMEPAD_TYPE_XBOX360, "Right Stick"},
-        {SDL_GAMEPAD_TYPE_XBOXONE, "Right Stick"},
-        {SDL_GAMEPAD_TYPE_GAMECUBE, "C Stick"},
+        {SDL_GAMEPAD_TYPE_XBOX360, "controller.right_stick"},
+        {SDL_GAMEPAD_TYPE_XBOXONE, "controller.right_stick"},
+        {SDL_GAMEPAD_TYPE_GAMECUBE, "controller.c_stick"},
     }},
     { SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, {
         {SDL_GAMEPAD_TYPE_PS3, "L1"},
@@ -126,7 +130,7 @@ Rml::String native_axis_name(const PADAxisMapping& mapping, SDL_Gamepad* gamepad
         return native_button_name(gamepad, static_cast<u32>(mapping.nativeButton));
     }
 
-    return "Not Bound";
+    return i18n::tr_str("controller.not_bound");
 }
 
 bool is_dpad_button(PADButton button) {
@@ -164,28 +168,28 @@ bool keyboard_escape_pressed() {
 
 Rml::String keyboard_key_name(s32 scancode) {
     if (scancode == PAD_KEY_INVALID) {
-        return "Not Bound";
+        return i18n::tr_str("controller.not_bound");
     }
     switch (scancode) {
     case PAD_KEY_MOUSE_LEFT:
-        return "Mouse Left";
+        return i18n::tr_str("controller.mouse_left");
     case PAD_KEY_MOUSE_MIDDLE:
-        return "Mouse Middle";
+        return i18n::tr_str("controller.mouse_middle");
     case PAD_KEY_MOUSE_RIGHT:
-        return "Mouse Right";
+        return i18n::tr_str("controller.mouse_right");
     case PAD_KEY_MOUSE_X1:
-        return "Mouse X1";
+        return i18n::tr_str("controller.mouse_x1");
     case PAD_KEY_MOUSE_X2:
-        return "Mouse X2";
+        return i18n::tr_str("controller.mouse_x2");
     default:
         break;
     }
     if (scancode < 0) {
-        return "Unknown";
+        return i18n::tr_str("common.unknown");
     }
     const char* name = SDL_GetScancodeName(static_cast<SDL_Scancode>(scancode));
     if (name == nullptr || name[0] == '\0') {
-        return "Unknown";
+        return i18n::tr_str("common.unknown");
     }
     return name;
 }
@@ -633,11 +637,11 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                     });
             };
 
-            pane.add_section("Analog");
+            pane.add_section(i18n::tr_str("controller.analog"));
             addKeyAxis(PAD_AXIS_TRIGGER_L);
             addKeyAxis(PAD_AXIS_TRIGGER_R);
 
-            pane.add_section("Digital");
+            pane.add_section(i18n::tr_str("controller.digital"));
             addKeyButton(PAD_TRIGGER_L);
             addKeyButton(PAD_TRIGGER_R);
             break;
@@ -1259,13 +1263,13 @@ Rml::String native_button_name(SDL_Gamepad* gamepad, u32 buttonUntyped) {
         case SDL_GAMEPAD_BUTTON_LABEL_Y:
             return "Y";
         case SDL_GAMEPAD_BUTTON_LABEL_CROSS:
-            return "Cross";
+            return i18n::tr_str("controller.button_cross");
         case SDL_GAMEPAD_BUTTON_LABEL_CIRCLE:
-            return "Circle";
+            return i18n::tr_str("controller.button_circle");
         case SDL_GAMEPAD_BUTTON_LABEL_TRIANGLE:
-            return "Triangle";
+            return i18n::tr_str("controller.button_triangle");
         case SDL_GAMEPAD_BUTTON_LABEL_SQUARE:
-            return "Square";
+            return i18n::tr_str("controller.button_square");
         default:
             break;
         }
@@ -1280,20 +1284,20 @@ Rml::String native_button_name(SDL_Gamepad* gamepad, u32 buttonUntyped) {
 
         for (const auto& name : buttonNames.names) {
             if (name.type == type) {
-                return name.name;
+                return i18n::tr_str(name.name);
             }
         }
     }
 
     switch (button) {
     case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
-        return "D-pad left";
+        return i18n::tr_str("controller.dpad_left");
     case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
-        return "D-pad right";
+        return i18n::tr_str("controller.dpad_right");
     case SDL_GAMEPAD_BUTTON_DPAD_UP:
-        return "D-pad up";
+        return i18n::tr_str("controller.dpad_up");
     case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
-        return "D-pad down";
+        return i18n::tr_str("controller.dpad_down");
     default:
         break;
     }
@@ -1301,7 +1305,7 @@ Rml::String native_button_name(SDL_Gamepad* gamepad, u32 buttonUntyped) {
     if (const char* name = PADGetNativeButtonName(buttonUntyped)) {
         return name;
     }
-    return "Unknown";
+    return i18n::tr_str("common.unknown");
 }
 
 }  // namespace dusk::ui

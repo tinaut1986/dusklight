@@ -88,13 +88,6 @@ enum class AudioOutputMode : u8 {
     Surround8ch = 3,        // discrete 7.1
 };
 
-// Language used by the Dusklight configuration menus (not the game's language).
-enum class MenuLanguage : u8 {
-    Auto = 0,
-    English = 1,
-    Spanish = 2,
-};
-
 namespace config {
 template <>
 struct ConfigEnumRange<BloomMode> {
@@ -166,12 +159,6 @@ template <>
 struct ConfigEnumRange<AudioOutputMode> {
     static constexpr auto min = AudioOutputMode::StereoSpeakers;
     static constexpr auto max = AudioOutputMode::Surround8ch;
-};
-
-template <>
-struct ConfigEnumRange<MenuLanguage> {
-    static constexpr auto min = MenuLanguage::Auto;
-    static constexpr auto max = MenuLanguage::Spanish;
 };
 
 template <>
@@ -350,8 +337,9 @@ struct UserSettings {
     } game;
 
     struct {
-        // Dusklight UI
-        ConfigVar<MenuLanguage> menuLanguage;
+        // Dusklight UI language: a res/l10n file code ("es", "pt-BR", ...) or "auto".
+        // Not the game's own language (game.language).
+        ConfigVar<std::string> menuLanguage;
     } ui;
 
     struct {

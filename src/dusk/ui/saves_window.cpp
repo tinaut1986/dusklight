@@ -182,7 +182,7 @@ void export_artifact(save_manager::ExportArtifact artifact, std::string pattern)
         .parentWindow = aurora::window::get_sdl_window(),
         .sourceLocation = borealis::io::fs_path_to_string(artifact.path),
         .suggestedName = artifact.suggestedName,
-        .filters = {{"Save file", std::move(pattern)}},
+        .filters = {{i18n::tr_str("saves.filter_save_file"), std::move(pattern)}},
     };
     borealis::file_select::export_file(
         std::move(options), [artifact = std::move(artifact)](borealis::file_select::Result result) {
@@ -460,7 +460,7 @@ void begin_import() {
     borealis::file_select::open_file(
         {
             .parentWindow = aurora::window::get_sdl_window(),
-            .filters = {{"Save files", "gci;raw;dusksave"}},
+            .filters = {{i18n::tr_str("saves.filter_save_files"), "gci;raw;dusksave"}},
         },
         &import_dialog_callback);
 }

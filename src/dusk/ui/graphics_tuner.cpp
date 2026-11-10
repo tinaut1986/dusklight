@@ -47,7 +47,8 @@ Rml::String format_internal_resolution(int value) {
     u32 height = 0;
     AuroraGetRenderSize(&width, &height);
     if (value <= 0) {
-        return fmt::format("Auto ({}×{})", width, height);
+        return fmt::format(fmt::runtime(i18n::tr_source("graphics.auto_resolution")),
+            fmt::arg("width", width), fmt::arg("height", height));
     }
     return fmt::format("{}× ({}×{})", value, width, height);
 }
@@ -55,9 +56,9 @@ Rml::String format_internal_resolution(int value) {
 Rml::String format_resampler(int value) {
     switch (static_cast<Resampler>(value)) {
     case Resampler::Bilinear:
-        return "Bilinear";
+        return tr_str("graphics.resampler_bilinear");
     case Resampler::Area:
-        return "Area";
+        return tr_str("graphics.resampler_area");
     default:
         return "";
     }
@@ -66,9 +67,9 @@ Rml::String format_resampler(int value) {
 Rml::String format_post_process_mode(int value) {
     switch (static_cast<BloomMode>(value)) {
     case BloomMode::Off:
-        return "Off";
+        return tr_str("common.off");
     case BloomMode::Classic:
-        return "Classic";
+        return tr_str("preset.classic");
     case BloomMode::Dusk:
         return "Dusklight";
     default:

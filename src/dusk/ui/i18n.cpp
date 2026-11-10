@@ -1,17 +1,24 @@
 #include "i18n.hpp"
 
 #include "dusk/logging.h"
+#include "dusk/settings.h"
 
+#include <borealis/io.hpp>
 #include <nlohmann/json.hpp>
 
 #include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_locale.h>
 
+#include <algorithm>
 #include <atomic>
-#include <memory>
+#include <cctype>
+#include <filesystem>
+#include <optional>
 #include <string>
+#include <system_error>
 #include <unordered_map>
+#include <vector>
 
 namespace dusk::ui::i18n {
 namespace {
@@ -21,18 +28,20 @@ using Json = nlohmann::json;
 using StringMap = std::unordered_map<std::string, std::string>;
 
 constexpr std::string_view kResourceDir = "res/l10n";
+constexpr std::string_view kMetaKey = "_meta";
 
 StringMap gTranslations;
 StringMap gEnglish;
 bool gTranslated = false;
-MenuLanguage gCurrentLanguage = MenuLanguage::English;
+std::string gCurrentLanguage{kSourceLanguage};
+std::vector<LanguageInfo> gLanguages;
 std::atomic<bool> gRefreshRequested{false};
 
 /*
- * Build the path for a locale file. Assets resolve relative to SDL_GetBasePath()
+ * Directory holding the locale files. Assets resolve relative to SDL_GetBasePath()
  * (or DUSK_ASSET_DIR when installed), mirroring ImGuiEngine::GetAssetPath.
  */
-std::string locale_path(std::string_view language) {
+std::string locale_dir() {
     std::string path;
 #ifdef DUSK_ASSET_DIR
     const char* basePath = DUSK_ASSET_DIR;
@@ -46,15 +55,30 @@ std::string locale_path(std::string_view language) {
         }
     }
     path += kResourceDir;
+    return path;
+}
+
+std::string locale_path(std::string_view code) {
+    std::string path = locale_dir();
     path += '/';
-    path += language;
+    path += code;
     path += ".json";
     return path;
+}
+
+std::string lower(std::string_view value) {
+    std::string out{value};
+    std::transform(out.begin(), out.end(), out.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return out;
 }
 
 void flatten(const std::string& prefix, const Json& node, StringMap& out) {
     if (node.is_object()) {
         for (auto it = node.begin(); it != node.end(); ++it) {
+            if (prefix.empty() && it.key() == kMetaKey) {
+                continue;
+            }
             std::string key = it.key();
             if (!prefix.empty()) {
                 key = prefix + "." + key;
@@ -68,11 +92,10 @@ void flatten(const std::string& prefix, const Json& node, StringMap& out) {
     }
 }
 
-bool load_language_file(std::string_view language, StringMap& out) {
-    const auto path = locale_path(language);
+std::optional<Json> read_json(const std::string& path) {
     SDL_IOStream* stream = SDL_IOFromFile(path.c_str(), "rb");
     if (stream == nullptr) {
-        return false;
+        return std::nullopt;
     }
     const Sint64 size = SDL_GetIOSize(stream);
     std::string contents;
@@ -84,38 +107,147 @@ bool load_language_file(std::string_view language, StringMap& out) {
     SDL_CloseIO(stream);
 
     try {
-        const Json json = Json::parse(contents);
-        flatten("", json, out);
+        return Json::parse(contents);
     } catch (const Json::parse_error& e) {
         DuskLog.error("i18n: failed to parse {}: {}", path, e.what());
+        return std::nullopt;
+    }
+}
+
+bool load_language_file(std::string_view code, StringMap& out) {
+    const auto json = read_json(locale_path(code));
+    if (!json) {
         return false;
     }
+    flatten("", *json, out);
     return true;
 }
 
 /*
- * Detect the system locale with SDL and map it onto a supported language.
+ * Sorted list of fmt replacement fields ("{count}", "{}") in a string, ignoring
+ * escaped braces ("{{" / "}}"). Used to reject translations that would make
+ * fmt::format throw or silently drop a value.
  */
-MenuLanguage detect_system_language() {
+std::vector<std::string> placeholders(std::string_view text) {
+    std::vector<std::string> out;
+    for (size_t i = 0; i < text.size(); ++i) {
+        if (text[i] != '{') {
+            continue;
+        }
+        if (i + 1 < text.size() && text[i + 1] == '{') {
+            ++i;
+            continue;
+        }
+        const size_t end = text.find('}', i);
+        if (end == std::string_view::npos) {
+            out.emplace_back(text.substr(i));
+            break;
+        }
+        out.emplace_back(text.substr(i, end - i + 1));
+        i = end;
+    }
+    std::sort(out.begin(), out.end());
+    return out;
+}
+
+/* Drop translated entries whose placeholders differ from English. */
+void validate_translations(std::string_view code) {
+    size_t rejected = 0;
+    for (auto it = gTranslations.begin(); it != gTranslations.end();) {
+        const auto english = gEnglish.find(it->first);
+        if (english != gEnglish.end() && placeholders(english->second) != placeholders(it->second)) {
+            DuskLog.warn("i18n: '{}' in {}.json has placeholders that do not match English; "
+                         "using English",
+                it->first, code);
+            it = gTranslations.erase(it);
+            ++rejected;
+            continue;
+        }
+        ++it;
+    }
+    if (rejected > 0) {
+        DuskLog.warn("i18n: rejected {} entr{} from {}.json", rejected, rejected == 1 ? "y" : "ies",
+            code);
+    }
+}
+
+void discover_languages() {
+    gLanguages.clear();
+
+    std::error_code ec;
+    const std::filesystem::path dir = borealis::io::fs_path_from_utf8(locale_dir());
+    for (const auto& entry : std::filesystem::directory_iterator{dir, ec}) {
+        if (!entry.is_regular_file(ec) || entry.path().extension() != ".json") {
+            continue;
+        }
+        LanguageInfo info;
+        info.code = borealis::io::fs_path_to_generic_string(entry.path().stem());
+        info.name = info.code;
+        if (const auto json = read_json(locale_path(info.code))) {
+            const auto meta = json->find(kMetaKey);
+            if (meta != json->end() && meta->is_object()) {
+                const auto name = meta->find("name");
+                if (name != meta->end() && name->is_string()) {
+                    info.name = name->get<std::string>();
+                }
+            }
+        }
+        gLanguages.push_back(std::move(info));
+    }
+    if (ec) {
+        DuskLog.warn("i18n: could not list {}: {}", locale_dir(), ec.message());
+    }
+
+    const bool hasEnglish = std::any_of(gLanguages.begin(), gLanguages.end(),
+        [](const LanguageInfo& l) { return l.code == kSourceLanguage; });
+    if (!hasEnglish) {
+        gLanguages.push_back({std::string{kSourceLanguage}, "English"});
+    }
+
+    std::sort(gLanguages.begin(), gLanguages.end(), [](const LanguageInfo& a, const LanguageInfo& b) {
+        if ((a.code == kSourceLanguage) != (b.code == kSourceLanguage)) {
+            return a.code == kSourceLanguage;
+        }
+        return lower(a.name) < lower(b.name);
+    });
+}
+
+const LanguageInfo* find_language(std::string_view code) {
+    const std::string wanted = lower(code);
+    for (const auto& language : gLanguages) {
+        if (lower(language.code) == wanted) {
+            return &language;
+        }
+    }
+    return nullptr;
+}
+
+/*
+ * Map the system locales onto an available language. "pt_BR" tries "pt-BR" first,
+ * then "pt".
+ */
+std::string detect_system_language() {
     int localeCount = 0;
     SDL_Locale** locales = SDL_GetPreferredLocales(&localeCount);
     if (locales == nullptr || localeCount <= 0) {
-        return MenuLanguage::English;
+        return std::string{kSourceLanguage};
     }
 
-    MenuLanguage result = MenuLanguage::English;
+    std::string result{kSourceLanguage};
     for (int i = 0; i < localeCount; ++i) {
-        SDL_Locale* locale = locales[i];
-        if (locale == nullptr) {
+        const SDL_Locale* locale = locales[i];
+        if (locale == nullptr || locale->language == nullptr) {
             continue;
         }
-        const std::string_view language = locale->language != nullptr ? locale->language : "";
-        if (language == "es") {
-            result = MenuLanguage::Spanish;
-            break;
+        const std::string language = locale->language;
+        if (locale->country != nullptr && locale->country[0] != '\0') {
+            if (const auto* match = find_language(language + "-" + locale->country)) {
+                result = match->code;
+                break;
+            }
         }
-        if (language == "en") {
-            result = MenuLanguage::English;
+        if (const auto* match = find_language(language)) {
+            result = match->code;
             break;
         }
     }
@@ -123,12 +255,17 @@ MenuLanguage detect_system_language() {
     return result;
 }
 
-MenuLanguage resolve_language() {
-    const auto configured = getSettings().ui.menuLanguage.getValue();
-    if (configured == MenuLanguage::Auto) {
+std::string resolve_language() {
+    const std::string configured = getSettings().ui.menuLanguage.getValue();
+    if (configured.empty() || lower(configured) == kAutoLanguage) {
         return detect_system_language();
     }
-    return configured;
+    if (const auto* match = find_language(configured)) {
+        return match->code;
+    }
+    DuskLog.warn("i18n: configured language '{}' not found in {}; using English", configured,
+        locale_dir());
+    return std::string{kSourceLanguage};
 }
 
 void apply_language() {
@@ -136,22 +273,26 @@ void apply_language() {
     gEnglish.clear();
 
     gCurrentLanguage = resolve_language();
-    gTranslated = gCurrentLanguage != MenuLanguage::English;
+    gTranslated = gCurrentLanguage != kSourceLanguage;
 
     // Always load English: it doubles as the fallback for missing keys.
-    if (!load_language_file("en", gEnglish)) {
+    if (!load_language_file(kSourceLanguage, gEnglish)) {
         DuskLog.warn("i18n: English locale file missing; menu strings will show their keys");
     }
 
     if (gTranslated) {
-        const auto name = gCurrentLanguage == MenuLanguage::Spanish ? "es" : "en";
-        if (!load_language_file(name, gTranslations)) {
-            DuskLog.warn("i18n: failed to load locale '{}'; falling back to English", name);
+        if (!load_language_file(gCurrentLanguage, gTranslations)) {
+            DuskLog.warn("i18n: failed to load locale '{}'; falling back to English",
+                gCurrentLanguage);
             gTranslations.clear();
             gTranslated = false;
-            gCurrentLanguage = MenuLanguage::English;
+            gCurrentLanguage = std::string{kSourceLanguage};
+        } else {
+            validate_translations(gCurrentLanguage);
         }
     }
+    DuskLog.info("i18n: menu language '{}' ({} strings, {} translated)", gCurrentLanguage,
+        gEnglish.size(), gTranslated ? gTranslations.size() : gEnglish.size());
 }
 
 const std::string* find_string(const StringMap& map, std::string_view key) {
@@ -162,12 +303,14 @@ const std::string* find_string(const StringMap& map, std::string_view key) {
 }  // namespace
 
 void initialize() noexcept {
+    discover_languages();
     apply_language();
 }
 
 void shutdown() noexcept {
     gTranslations.clear();
     gEnglish.clear();
+    gLanguages.clear();
     gTranslated = false;
 }
 
@@ -183,16 +326,11 @@ std::string_view tr(std::string_view key) noexcept {
     return key;
 }
 
-std::string_view tr_source(std::string_view key) noexcept {
-    // The source text lives under the same key in the English table; keep a separate
-    // accessor so callers document intent (raw source for composites vs translation).
-    if (const auto* value = find_string(gEnglish, key)) {
-        return *value;
-    }
-    return key;
+const std::vector<LanguageInfo>& available_languages() noexcept {
+    return gLanguages;
 }
 
-MenuLanguage current_language() noexcept {
+const std::string& current_language() noexcept {
     return gCurrentLanguage;
 }
 
@@ -211,7 +349,7 @@ bool consume_refresh_requested() noexcept {
 }
 
 std::string_view language_setting_name() noexcept {
-    return "ui.menuLanguage";
+    return "ui.language";
 }
 
 }  // namespace dusk::ui::i18n

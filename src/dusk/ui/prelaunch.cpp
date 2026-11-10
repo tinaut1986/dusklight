@@ -85,10 +85,12 @@ const Rml::String kDocumentSource = R"RML(
 </rml>
 )RML";
 
-const std::vector<borealis::file_select::Filter> kDiscFileFilters{
-    {"Game Disc Images", "iso;gcm;ciso;gcz;nfs;rvz;wbfs;wia;tgc"},
-    {"All Files", "*"},
-};
+std::vector<borealis::file_select::Filter> disc_file_filters() {
+    return {
+        {i18n::tr_str("prelaunch.filter_disc_images"), "iso;gcm;ciso;gcz;nfs;rvz;wbfs;wia;tgc"},
+        {i18n::tr_str("prelaunch.filter_all_files"), "*"},
+    };
+}
 
 struct DiscVerificationResult {
     std::string path;
@@ -794,7 +796,7 @@ void open_iso_picker() noexcept {
     borealis::file_select::open_file(
         {
             .parentWindow = aurora::window::get_sdl_window(),
-            .filters = kDiscFileFilters,
+            .filters = disc_file_filters(),
         },
         &file_dialog_callback);
 }
@@ -1091,7 +1093,7 @@ void Prelaunch::update() {
 
             switch (state.activeDiscInfo.platform) {
             case iso::Platform::Unknown:
-                innerRML += "Unknown";
+                innerRML += i18n::tr_str("common.unknown");
                 break;
             case iso::Platform::GameCube:
                 innerRML += "GameCube";
@@ -1120,7 +1122,7 @@ void Prelaunch::update() {
                 innerRML += "KOR";
                 break;
             default:
-                innerRML += "Unknown";
+                innerRML += i18n::tr_str("common.unknown");
                 break;
             }
             set_text_content(mDiscDetail, innerRML);

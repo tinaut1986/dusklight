@@ -399,7 +399,6 @@ template class ConfigImpl<Resampler>;
 template class ConfigImpl<AlwaysGreatspinMode>;
 template class ConfigImpl<MagicArmorMode>;
 template class ConfigImpl<ui::ControlLayout>;
-template class ConfigImpl<MenuLanguage>;
 
 void Register(ConfigVarBase& configVar) {
     const std::string_view name = configVar.getName();
