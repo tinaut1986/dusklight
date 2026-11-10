@@ -931,9 +931,23 @@ Prelaunch::Prelaunch() : Document(kDocumentSource, false, DocumentScope::Prelaun
     focus: auto;
     tab-index: auto;
 }
-#update-download:focus-visible {
+/* Focused/hovered like the menu entries, mirrored for this right-aligned
+   button: a gold bar solid under the text and arrow, fading to the left.
+   The padding is cancelled by negative margins so nothing moves. No black
+   glow (inherited from version-info): it smudged the dark text. */
+#update-download:focus-visible,
+#update-download:hover {
     color: var(--color-black);
-    decorator: var(--menu-button-decorator-hover);
+    font-effect: none;
+    decorator: horizontal-gradient(#FEE68500 #FEE685FF);
+    padding: 3dp 10dp 3dp 72dp;
+    margin: -3dp -10dp -3dp -72dp;
+}
+body.mirrored #update-download:focus-visible,
+body.mirrored #update-download:hover {
+    decorator: horizontal-gradient(#FEE685FF #FEE68500);
+    padding: 3dp 72dp 3dp 10dp;
+    margin: -3dp -72dp -3dp -10dp;
 }
 )RCSS");
         if (registered) {
